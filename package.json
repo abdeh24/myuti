@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "@whiskeysockets/baileys": "^7.0.0-rc10",
+    "baileys": "github:whiskeysockets/baileys",
+    "dotenv": "^17.4.2",
+    "pino": "^10.3.1"
+  },
+  "name": "myuti",
+  "version": "1.0.0",
+  "description": "whatsapp bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abdeh24/myuti.git"
+  },
+  "keywords": [
+    "WhatsApp",
+    "Bot"
+  ],
+  "author": "abdeh24",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/abdeh24/myuti/issues"
+  },
+  "homepage": "https://github.com/abdeh24/myuti#readme"
+}
