@@ -9,23 +9,24 @@ const PHONE_NUMBER = process.env.PHONE_NUMBER
 async function main(){
   const {state, saveCreds} = await useMultiFileAuthState('./AUTH')
   const {version} = await fetchLatestBaileysVersion()
-  console.log(`Baileys Version: ${version}`)
+  console.log(`Baileys Version: ${version.join('.')}`)
   
   const sock = makeWASocket({
     version,
     auth: state,
     logger: pino(),
     printQRInTerminal: false,
-    mobile: false
   })
-  
-  if (!sock.authState.creds.registered){
-    if(!PHONE_NUMBER){return console.log('! ERROR HERE !\n\nPHONE_NUMBER does not exist in .env')}
+
+  if(!sock.authState.creds.registered){
+    if(!PHONE_NUMBER) return console.log('! ERROR HERE !\n\nPHONE_NUMBER does not exist in .env')
     setTimeout(async () => {
       try{
         const code = await sock.requestPairingCode(PHONE_NUMBER)
         console.log(`Pairing Code for ${PHONE_NUMBER}: ${code}\n`)
-      }catch(err){console.log(`! ERROR HERE !\n\n${err}\n`)}
+      }catch(err){
+        console.log(`! ERROR HERE !\n\n${err}\n`)
+      }
     }, 3000)
   }
   
@@ -35,7 +36,7 @@ async function main(){
     const {connection, lastDisconnect} = update
     if(connection === 'close'){
       const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut
-      if(shouldReconnect){setTimeout(main, 2000)}
+      if(shouldReconnect) setTimeout(main, 2000)
     }else if(connection === 'open'){
       console.log(`Bot connected as ${PHONE_NUMBER}\n`)
     }
@@ -47,4 +48,3 @@ async function main(){
 }
 
 main()
-//process.stdin.resume()
