@@ -7,6 +7,14 @@ const pino = require('pino')
 const PHONE_NUMBER = process.env.PHONE_NUMBER
 
 async function main(){
+  let menuText = ''
+  try{
+    menuText = fs.readFileSync('./src/INFO.txt', 'utf8')
+  }catch(err){
+    console.error(err)
+  }
+  
+  
   const {state, saveCreds} = await useMultiFileAuthState('./AUTH')
   const {version} = await fetchLatestBaileysVersion()
   console.log(`Baileys Version: ${version.join('.')}`)
@@ -44,6 +52,25 @@ async function main(){
   sock.ev.on('messages.upsert', async ({messages}) => {
     const msg = messages[0]
     console.log(msg)
+    if(!msg.message || msg.key.fromMe) return
+    const text = msg.message.conversation || msg.message.extendedTextMessage?.text || "none"
+    
+    let prompt = text.split('/\s+/')[0].trim()
+    
+    jid = msg.key.remoteJid
+    
+    switch(prompt){
+      case '.menu':
+      case '.info':
+        await sock.sendMessage(jid, {text: menuText}, {quoted: msg})
+        break
+      case '.sticker':
+        await sock.sendMessage(jid, {text: '\`\`\`Gaada :v\`\`\`'}, {quoted: msg})
+        break
+      case '.whenyah':
+        await sock.sendMessage(jid, {text: 'when when'}, {quoted: msg})
+        break
+    }
   })
 }
 

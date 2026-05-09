@@ -1,0 +1,7 @@
+>> ```Myuti WhatsApp Bot```
+> v0.0.1
+
+>> Commands
+> .info / .menu
+> .sticker <image>
+> .whenyah
