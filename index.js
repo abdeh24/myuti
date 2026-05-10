@@ -55,7 +55,8 @@ async function main(){
     if(!msg.message || msg.key.fromMe) return
     const text = msg.message.conversation || msg.message.extendedTextMessage?.text || "none"
     
-    let prompt = text.split('/\s+/')[0].trim()
+    let prompt = text.split(' ')[0]
+    console.log(prompt)
     
     jid = msg.key.remoteJid
     
