@@ -69,7 +69,7 @@ async function main(){
         await sock.sendMessage(jid, {text: '\`\`\`Gaada :v\`\`\`'}, {quoted: msg})
         break
       case '.whenyah':
-        await sock.sendMessage(jid, {text: 'when when'}, {quoted: msg})
+        await sock.sendMessage(jid, {text: '> when when'}, {quoted: msg})
         break
     }
   })
