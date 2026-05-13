@@ -85,7 +85,7 @@ async function main(){
     let text = rawText.split(' ')
     
     if(!msg.key.fromMe){
-      console.log(msg)
+      //console.log(msg)
       console.log(`${userId} | ${msg.pushName}\n> ${rawText}\n=================`)
     }
     
