@@ -100,7 +100,7 @@ async function main(){
         break
       case '.sticker':
         if(!msg.message.imageMessage){
-          await sock.sendMessage(jid, {text: 'No image found, please attach image'}}, {quoted: msg})
+          await sock.sendMessage(jid, {text: 'No image found, please attach image'}, {quoted: msg})
         }else{
           sticker.fromImage(sock, jid, msg, downloadMediaMessage)
         }
