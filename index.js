@@ -96,7 +96,7 @@ async function main(){
         await sock.sendMessage(jid, {text: menuText}, {quoted: msg})
         break
       case '.sticker':
-        await sock.sendMessage(jid, {text: 'Belum ada yah'}, {quoted: msg})
+        await sock.sendMessage(jid, {sticker: {url: './src/test.webp'}}, {quoted: msg})
         break
       case '.whenyah':
         await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
