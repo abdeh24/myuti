@@ -9,6 +9,8 @@ const util = require('util')
 const execPromise = util.promisify(exec)
 
 const PHONE_NUMBER = process.env.PHONE_NUMBER
+const OWNER_PHONE_NUMBER = process.env.OWNER_PHONE_NUMBER
+
 const osInfo = `\`\`\`Server Info\`\`\`
 > Platform: ${os.platform()}
 > Architecture: ${os.arch()}
@@ -25,7 +27,7 @@ async function isUpdateExist() {
       return "No new updates found.";
     }
     
-    return "Updates pulled successfully! You can now .kill the process...";
+    return "Updates pulled successfully! You can now .restart the process...";
   } catch (error) {
     return `Error executing git pull: ${error.message}`;
   }
@@ -46,7 +48,7 @@ async function main(){
   const sock = makeWASocket({
     version,
     auth: state,
-    logger: pino(),
+    logger: pino({level: 'silent'}),
     printQRInTerminal: false,
   })
 
@@ -75,16 +77,18 @@ async function main(){
   })
   sock.ev.on('messages.upsert', async ({messages}) => {
     const msg = messages[0]
-    console.log(msg)
     if(!msg.message || msg.key.fromMe) return
-    const text = msg.message.conversation || msg.message.extendedTextMessage?.text || "none"
+    const rawText = msg.message.conversation || msg.message.extendedTextMessage?.text || "none"
+    const userId = msg.key.participantAlt || msg.key.remoteJidAlt || "error"
+    let text = rawText.split(' ')
     
-    let prompt = text.split(' ')[0]
-    console.log(prompt)
+    if(!msg.key.fromMe){
+      console.log(`${userId} | ${msg.pushName}\n> ${rawText}\n=================`)
+    }
     
     jid = msg.key.remoteJid
     
-    switch(prompt){
+    switch(text[0]){
       case '.info':
         await sock.sendMessage(jid, {text: osInfo}, {quoted: msg})
         break
@@ -97,15 +101,20 @@ async function main(){
       case '.whenyah':
         await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
         break
-      case '.kill':
-        await sock.sendMessage(jid, {text: 'Goodbye'}, {quoted: msg})
-        process.exit(0)
-        break
-      case '.lmk':
-        let log = await isUpdateExist()
-        console.log(log)
-        await sock.sendMessage(jid, {text: log}, {quoted: msg})
-        break
+    }
+    
+    if(userId == `${OWNER_PHONE_NUMBER}@s.whatsapp.net` || userId == `${OWNER_PHONE_NUMBER}@s.whatsapp.net`){
+      switch(text[0]){
+        case '.restart':
+          await sock.sendMessage(jid, {text: 'Restarting...'}, {quoted: msg})
+          process.exit(0)
+          break
+        case '.lmk':
+          let log = await isUpdateExist()
+          console.log(log)
+          await sock.sendMessage(jid, {text: log}, {quoted: msg})
+          break
+      }
     }
   })
 }

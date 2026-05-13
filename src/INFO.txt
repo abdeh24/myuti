@@ -2,9 +2,11 @@
 > v0.0.1
 
 >> Commands
-> .info _server info_
-> .menu _bot menu_
-> .sticker <image> _image to sticker_
-> .whenyah _when when_
-> .lmk _check git version & pull if needed_
-> .kill _death_
+> .info | _server info_
+> .menu | _bot menu_
+> .sticker <image> | _image to sticker_
+> .whenyah <text> | _idk
+
+>>> Iykyk
+> .lmk | _let myuti know and update self if update exist_
+> .restart | _will restart or kill process_
