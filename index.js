@@ -1,11 +1,13 @@
 require('dotenv').config()
-const {default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion} = require('@whiskeysockets/baileys')
+const {default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, downloadMediaMessage} = require('@whiskeysockets/baileys')
 const fs = require('fs')
 const path = require('path')
 const pino = require('pino')
 const {exec} = require('child_process')
 const os = require('node:os')
 const util = require('util')
+const sticker = require('./lib/sticker')
+
 const execPromise = util.promisify(exec)
 
 const PHONE_NUMBER = process.env.PHONE_NUMBER
@@ -19,17 +21,17 @@ const osInfo = `\`\`\`Server Info\`\`\`
 > Total Memory: ${(os.totalmem() / 1e9).toFixed(2)} GB
 > Free Memory: ${(os.freemem() / 1e9).toFixed(2)} GB`
 
-async function isUpdateExist() {
-  try {
-    const { stdout } = await execPromise('git pull');
+async function isUpdateExist(){
+  try{
+    const {stdout} = await execPromise('git pull')
     
-    if (stdout.includes('Already up to date.')) {
-      return "No new updates found.";
+    if(stdout.includes('Already up to date.')){
+      return "No new updates found."
     }
     
-    return "Updates pulled successfully! You can now .restart the process...";
-  } catch (error) {
-    return `Error executing git pull: ${error.message}`;
+    return "Updates pulled successfully! You can now .restart the process..."
+  }catch(error){
+    return `Error executing git pull: ${error.message}`
   }
 }
 
@@ -78,11 +80,12 @@ async function main(){
   sock.ev.on('messages.upsert', async ({messages}) => {
     const msg = messages[0]
     if(!msg.message || msg.key.fromMe) return
-    const rawText = msg.message.conversation || msg.message.extendedTextMessage?.text || "none"
+    const rawText = msg.message.conversation || msg.message.extendedTextMessage?.text || msg.message.imageMessage?.caption || "<not yet implemented>"
     const userId = msg.key.participantAlt || msg.key.remoteJidAlt || "error"
     let text = rawText.split(' ')
     
     if(!msg.key.fromMe){
+      console.log(msg)
       console.log(`${userId} | ${msg.pushName}\n> ${rawText}\n=================`)
     }
     
@@ -96,7 +99,11 @@ async function main(){
         await sock.sendMessage(jid, {text: menuText}, {quoted: msg})
         break
       case '.sticker':
-        await sock.sendMessage(jid, {sticker: {url: './src/test.webp'}}, {quoted: msg})
+        if(!msg.message.imageMessage){
+          await sock.sendMessage(jid, {text: 'No image found, please attach image'}}, {quoted: msg})
+        }else{
+          sticker.fromImage(sock, jid, msg, downloadMediaMessage)
+        }
         break
       case '.whenyah':
         await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
@@ -105,8 +112,8 @@ async function main(){
     
     if(userId == `${OWNER_PHONE_NUMBER}@s.whatsapp.net` || userId == `${OWNER_PHONE_NUMBER}@s.whatsapp.net`){
       switch(text[0]){
-        case '.restart':
-          await sock.sendMessage(jid, {text: 'Restarting...'}, {quoted: msg})
+        case '.dead':
+          await sock.sendMessage(jid, {text: 'Goodbye...'}, {quoted: msg})
           process.exit(0)
           break
         case '.lmk':
