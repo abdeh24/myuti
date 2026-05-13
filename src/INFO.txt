@@ -2,6 +2,9 @@
 > v0.0.1
 
 >> Commands
-> .info / .menu
-> .sticker <image>
-> .whenyah
+> .info _server info_
+> .menu _bot menu_
+> .sticker <image> _image to sticker_
+> .whenyah _when when_
+> .lmk _check git version & pull if needed_
+> .kill _death_

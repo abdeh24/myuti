@@ -3,8 +3,33 @@ const {default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLate
 const fs = require('fs')
 const path = require('path')
 const pino = require('pino')
+const {exec} = require('child_process')
+const os = require('node:os')
+const util = require('util')
+const execPromise = util.promisify(exec)
 
 const PHONE_NUMBER = process.env.PHONE_NUMBER
+const osInfo = `\`\`\`Server Info\`\`\`
+> Platform: ${os.platform()}
+> Architecture: ${os.arch()}
+> Release: ${os.release()}
+> Hostname: ${os.hostname()}
+> Total Memory: ${(os.totalmem() / 1e9).toFixed(2)} GB
+> Free Memory: ${(os.freemem() / 1e9).toFixed(2)} GB`
+
+async function isUpdateExist() {
+  try {
+    const { stdout } = await execPromise('git pull');
+    
+    if (stdout.includes('Already up to date.')) {
+      return "No new updates found.";
+    }
+    
+    return "Updates pulled successfully! You can now .kill the process...";
+  } catch (error) {
+    return `Error executing git pull: ${error.message}`;
+  }
+}
 
 async function main(){
   let menuText = ''
@@ -13,7 +38,6 @@ async function main(){
   }catch(err){
     console.error(err)
   }
-  
   
   const {state, saveCreds} = await useMultiFileAuthState('./AUTH')
   const {version} = await fetchLatestBaileysVersion()
@@ -61,15 +85,26 @@ async function main(){
     jid = msg.key.remoteJid
     
     switch(prompt){
-      case '.menu':
       case '.info':
+        await sock.sendMessage(jid, {text: osInfo}, {quoted: msg})
+        break
+      case '.menu':
         await sock.sendMessage(jid, {text: menuText}, {quoted: msg})
         break
       case '.sticker':
-        await sock.sendMessage(jid, {text: '\`\`\`Gaada :v\`\`\`'}, {quoted: msg})
+        await sock.sendMessage(jid, {text: 'Belum ada yah'}, {quoted: msg})
         break
       case '.whenyah':
-        await sock.sendMessage(jid, {text: '> when when'}, {quoted: msg})
+        await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
+        break
+      case '.kill':
+        await sock.sendMessage(jid, {text: 'Goodbye'}, {quoted: msg})
+        process.exit(0)
+        break
+      case '.lmk':
+        let log = await isUpdateExist()
+        console.log(log)
+        await sock.sendMessage(jid, {text: log}, {quoted: msg})
         break
     }
   })
