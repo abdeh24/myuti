@@ -100,7 +100,7 @@ async function main(){
           await sock.sendMessage(jid, {text: 'No image found, please attach image'}, {quoted: msg})
         }else if(msg.message.imageMessage){
           sticker.fromImage(sock, jid, msg, downloadMediaMessage)
-        }}else if(msg.message.videoMessage){
+        }else if(msg.message.videoMessage){
           sticker.fromVideo(sock, jid, msg, downloadMediaMessage)
         }
         break
