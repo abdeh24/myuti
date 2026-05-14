@@ -29,7 +29,7 @@ async function isUpdateExist(){
       return "No new updates found."
     }
     
-    return "Updates pulled successfully! You can now .restart the process..."
+    return "Updates pulled successfully! You can now .kill the process..."
   }catch(error){
     return `Error executing git pull: ${error.message}`
   }
@@ -92,17 +92,16 @@ async function main(){
     jid = msg.key.remoteJid
     
     switch(text[0]){
-      case '.info':
-        await sock.sendMessage(jid, {text: osInfo}, {quoted: msg})
-        break
       case '.menu':
         await sock.sendMessage(jid, {text: menuText}, {quoted: msg})
         break
       case '.sticker':
-        if(!msg.message.imageMessage){
+        if(!msg.message.imageMessage || !msg.message.videoMessage){
           await sock.sendMessage(jid, {text: 'No image found, please attach image'}, {quoted: msg})
-        }else{
+        }else if(msg.message.imageMessage){
           sticker.fromImage(sock, jid, msg, downloadMediaMessage)
+        }}else if(msg.message.videoMessage){
+          sticker.fromVideo(sock, jid, msg, downloadMediaMessage)
         }
         break
       case '.whenyah':
@@ -112,7 +111,7 @@ async function main(){
     
     if(userId == `${OWNER_PHONE_NUMBER}@s.whatsapp.net` || userId == `${OWNER_PHONE_NUMBER}@s.whatsapp.net`){
       switch(text[0]){
-        case '.dead':
+        case '.kill':
           await sock.sendMessage(jid, {text: 'Goodbye...'}, {quoted: msg})
           process.exit(0)
           break
@@ -120,6 +119,9 @@ async function main(){
           let log = await isUpdateExist()
           console.log(log)
           await sock.sendMessage(jid, {text: log}, {quoted: msg})
+          break
+      case '.info':
+          await sock.sendMessage(jid, {text: osInfo}, {quoted: msg})
           break
       }
     }

@@ -4,7 +4,7 @@ WhatsApp bot open source project built with Node.js using WhiskeySockets/Baileys
 
 ## Features
 
-- Image to sticker
+- Image/Video/Gif to Sticker
 - More coming soon
 
 ## Needed

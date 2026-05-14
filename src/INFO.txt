@@ -1,12 +1,12 @@
 >> ```Myuti WhatsApp Bot```
-> v0.0.2
+> v0.0.3
 
 >> Commands
-> .info | _server info_
 > .menu | _bot menu_
-> .sticker <image> | _image to sticker_
+> .sticker <image/video/gif> | _image/video/gif to sticker_
 > .whenyah <text> | _when? i don't know_
 
 >> Iykyk
+> .info | _server info_
 > .lmk | _let myuti know and update if exist_
-> .dead | _will restart or kill itself (suicide)_
+> .kill | _will restart or kill itself (suicide)_
