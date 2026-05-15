@@ -78,7 +78,8 @@ async function main(){
       console.log(`Bot connected as ${PHONE_NUMBER}\n`)
     }
   })
-  sock.ev.on('messages.upsert', async ({messages}) => {
+  sock.ev.on('messages.upsert', async ({type, messages}) => {
+    if(type !== 'notify') return
     const msg = messages[0]
     if(!msg.message || msg.key.fromMe) return
     const rawText = msg.message.conversation || msg.message.extendedTextMessage?.text || msg.message.imageMessage?.caption || msg.message.videoMessage?.caption ||"<not yet implemented>"
@@ -129,37 +130,21 @@ async function main(){
           break
       case '.frp':
           let frpText = (text.slice(1).join(" ")).split("|")
-          let formatMsg = `{
-            key: {
-              remoteJid: '012345678901234567@g.us',
-              remoteJidAlt: undefined,
-              remoteJidUsername: undefined,
-              fromMe: false,
-              id: '0123456789ABCDEF0123456789ABCDEF',
-              participant: '01234567890123@lid',
-              participantAlt: \'${text[0]}@s.whatsapp.net\',
-              participantUsername: undefined,
-              addressingMode: 'lid'
-            },
-            category: undefined,
-            messageTimestamp: 1778315000,
-            pushName: '',
-            broadcast: false,
-            message: Message {
-              /**
-              senderKeyDistributionMessage: SenderKeyDistributionMessage {
-                groupId: '012345678901234567@g.us',
-                axolotlSenderKeyDistributionMessage: [Uint8Array]
+          if(frpText.length == 3){
+            let frpMsg = {
+              key: {
+                fromMe: false,
+                participant: `${frpText[0].replace(" ", "")}@s.whatsapp.net`,
+                remoteJid: jid,
+                id: "FKE" + Math.floor(Math.random() * 1000000000000)
               },
-              messageContextInfo: MessageContextInfo { threadId: [], messageSecret: [Uint8Array] },
-              **/
-              conversation: ${frpText[2]}
+              message: {
+                conversation: frpText[2]
+              }
             }
-          }`
-          if(frpText.length == 2){
-            await sock.sendMessage(jid, {text: text[1]}, {quoted: formatMsg})
+            await sock.sendMessage(jid, {text: frpText[1]}, {quoted: frpMsg})
           }else{
-            await sock.sendMessage(jid, {text: "Invalid param, correct format:\n.frp 62XXXXXXXXXXX | bot text | reply text"}, {quoted: formatMsg})
+            await sock.sendMessage(jid, {text: "Invalid param, correct format:\n.frp 62XXXXXXXXXXX|bot text|reply text"}, {quoted: formatMsg})
           }
           break
       }

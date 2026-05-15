@@ -3,7 +3,7 @@
 
 >> Commands
 > .menu
-> .sticker | .s <image/video/gif>
+> .sticker / .s <image/video/gif>
 > .whenyah <text>
 > .admin
 ;
@@ -11,4 +11,4 @@
 > .info | _server info_
 > .lmk | _let myuti know and update if exist_
 > .kill | _will restart or kill itself (suicide)_
-> .frp <reply_number> | <bot_text> | <reply_text> | _you know what to do_
+> .frp <reply_number>|<bot_text>|<reply_text>
