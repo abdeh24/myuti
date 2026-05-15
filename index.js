@@ -129,7 +129,7 @@ async function main(){
           break
       case '.frp':
           let frpText = (text.slice(1).join(" ")).split("|")
-          let formatMsg = {
+          let formatMsg = `{
             key: {
               remoteJid: '012345678901234567@g.us',
               remoteJidAlt: undefined,
@@ -137,7 +137,7 @@ async function main(){
               fromMe: false,
               id: '0123456789ABCDEF0123456789ABCDEF',
               participant: '01234567890123@lid',
-              participantAlt: `${text[0]}@s.whatsapp.net`,
+              participantAlt: \'${text[0]}@s.whatsapp.net\',
               participantUsername: undefined,
               addressingMode: 'lid'
             },
@@ -152,10 +152,10 @@ async function main(){
                 axolotlSenderKeyDistributionMessage: [Uint8Array]
               },
               messageContextInfo: MessageContextInfo { threadId: [], messageSecret: [Uint8Array] },
-              *//
-              conversation: `${frpText[2]}`
+              **/
+              conversation: ${frpText[2]}
             }
-          }
+          }`
           if(frpText.length == 2){
             await sock.sendMessage(jid, {text: text[1]}, {quoted: formatMsg})
           }else{
