@@ -39,6 +39,7 @@ async function main(){
   let menuText = ''
   try{
     menuText = fs.readFileSync('./src/INFO.txt', 'utf8')
+    menuText = menuText.split(';')
   }catch(err){
     console.error(err)
   }
@@ -93,7 +94,7 @@ async function main(){
     
     switch(text[0]){
       case '.menu':
-        await sock.sendMessage(jid, {text: menuText}, {quoted: msg})
+        await sock.sendMessage(jid, {text: menuText[0]}, {quoted: msg})
         break
       case '.sticker':
         if(!msg.message.imageMessage && !msg.message.videoMessage){
@@ -106,6 +107,9 @@ async function main(){
         break
       case '.whenyah':
         await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
+        break
+      case '.admin':
+        await sock.sendMessage(jid, {text: menuText[1]}, {quoted: msg})
         break
     }
     
@@ -122,6 +126,41 @@ async function main(){
           break
       case '.info':
           await sock.sendMessage(jid, {text: osInfo}, {quoted: msg})
+          break
+      case '.frp':
+          let frpText = (text.slice(1).join(" ")).split("|")
+          let formatMsg = {
+            key: {
+              remoteJid: '012345678901234567@g.us',
+              remoteJidAlt: undefined,
+              remoteJidUsername: undefined,
+              fromMe: false,
+              id: '0123456789ABCDEF0123456789ABCDEF',
+              participant: '01234567890123@lid',
+              participantAlt: `${text[0]}@s.whatsapp.net`,
+              participantUsername: undefined,
+              addressingMode: 'lid'
+            },
+            category: undefined,
+            messageTimestamp: 1778315000,
+            pushName: '',
+            broadcast: false,
+            message: Message {
+              /**
+              senderKeyDistributionMessage: SenderKeyDistributionMessage {
+                groupId: '012345678901234567@g.us',
+                axolotlSenderKeyDistributionMessage: [Uint8Array]
+              },
+              messageContextInfo: MessageContextInfo { threadId: [], messageSecret: [Uint8Array] },
+              *//
+              conversation: `${frpText[2]}`
+            }
+          }
+          if(frpText.length == 2){
+            await sock.sendMessage(jid, {text: text[1]}, {quoted: formatMsg})
+          }else{
+            await sock.sendMessage(jid, {text: "Invalid param, correct format:\n.frp 62XXXXXXXXXXX | bot text | reply text"}, {quoted: formatMsg})
+          }
           break
       }
     }
