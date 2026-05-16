@@ -23,7 +23,7 @@ const osInfo = `\`\`\`Server Info\`\`\`
 > Total Memory: ${(os.totalmem() / 1e9).toFixed(2)} GB
 > Free Memory: ${(os.freemem() / 1e9).toFixed(2)} GB`
 
-const cmdList =['.menu', '.sticker', '.s', '.whenyah', '.admin', '.afk', '.info', '.me']
+const cmdList =['.menu', '.sticker', '.s', '.whenyah', '.admin', '.afk', '.me']
 
 async function isUpdateExist(){
   try{

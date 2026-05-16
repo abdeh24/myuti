@@ -1,11 +1,15 @@
+
 >> ```Myuti WhatsApp Bot```
-> v0.0.5
+> v0.0.6
 
 >> Commands
 > .menu
 > .sticker / .s <image/video/gif>
 > .whenyah <text>
+> .afk <text>
+> .me
 > .admin
+
 ;
 >> Admin Commands
 > .info | _server info_
