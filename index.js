@@ -6,7 +6,9 @@ const pino = require('pino')
 const {exec} = require('child_process')
 const os = require('node:os')
 const util = require('util')
+
 const sticker = require('./lib/sticker')
+const localdb = require('./lib/localdbshit')
 
 const execPromise = util.promisify(exec)
 
@@ -20,6 +22,8 @@ const osInfo = `\`\`\`Server Info\`\`\`
 > Hostname: ${os.hostname()}
 > Total Memory: ${(os.totalmem() / 1e9).toFixed(2)} GB
 > Free Memory: ${(os.freemem() / 1e9).toFixed(2)} GB`
+
+const cmdList =['.menu', '.sticker', '.s', '.whenyah', '.admin', '.afk', '.info', '.me']
 
 async function isUpdateExist(){
   try{
@@ -36,6 +40,7 @@ async function isUpdateExist(){
 }
 
 async function main(){
+  await localdb.checkDB()
   let menuText = ''
   try{
     menuText = fs.readFileSync('./src/INFO.txt', 'utf8')
@@ -82,39 +87,40 @@ async function main(){
     if(type !== 'notify') return
     const msg = messages[0]
     if(!msg.message || msg.key.fromMe) return
-    const rawText = msg.message.conversation || msg.message.extendedTextMessage?.text || msg.message.imageMessage?.caption || msg.message.videoMessage?.caption ||"<not yet implemented>"
+    const rawText = msg.message.stickerMessage ? "<sticker>"
+    : msg.message.audioMessage ? "<audio>"
+    : (
+      msg.message.conversation ||
+      msg.message.extendedTextMessage?.text ||
+      msg.message.imageMessage?.caption ||
+      msg.message.videoMessage?.caption ||
+      "<not yet implemented>"
+      )
+    
     const userId = msg.key.participantAlt || msg.key.remoteJidAlt || "error"
     let text = rawText.split(' ')
     
     if(!msg.key.fromMe){
-      //console.log(msg)
       console.log(`${userId} | ${msg.pushName}\n> ${rawText}\n=================`)
     }
+    const jid = msg.key.remoteJid
     
-    jid = msg.key.remoteJid
-    
-    switch(text[0]){
-      case '.menu':
-        await sock.sendMessage(jid, {text: menuText[0]}, {quoted: msg})
-        break
-      case '.sticker':
-        if(!msg.message.imageMessage && !msg.message.videoMessage){
-          await sock.sendMessage(jid, {text: 'No image found, please attach image'}, {quoted: msg})
-        }else if(msg.message.imageMessage){
-          sticker.fromImage(sock, jid, msg, downloadMediaMessage)
-        }else if(msg.message.videoMessage){
-          sticker.fromVideo(sock, jid, msg, downloadMediaMessage)
-        }
-        break
-      case '.whenyah':
-        await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
-        break
-      case '.admin':
-        await sock.sendMessage(jid, {text: menuText[1]}, {quoted: msg})
-        break
+    let userData = await localdb.readDB(userId, true)
+    if(userData){
+      if(userData.isAfk == true){
+        let msNow = new Date().getTime()
+        let msResult = msNow - userData.afkTime
+        let time = new Date(msResult).toISOString().slice(11, 19)
+        let afkMsg = `You've stopped afk, time of afk:\n*${time}*`
+        await sock.sendMessage(jid, {text: afkMsg}, {quoted: msg})
+        
+        userData.isAfk = false
+        await localdb.writeDB(userId, {isAfk: false, afkTime: 0})
+      }
     }
     
-    if(userId == `${OWNER_PHONE_NUMBER}@s.whatsapp.net` || userId == `${OWNER_PHONE_NUMBER}@s.whatsapp.net`){
+    
+    if(userId == `${OWNER_PHONE_NUMBER}@s.whatsapp.net`){
       switch(text[0]){
         case '.kill':
           await sock.sendMessage(jid, {text: 'Goodbye...'}, {quoted: msg})
@@ -144,11 +150,49 @@ async function main(){
             }
             await sock.sendMessage(jid, {text: frpText[1]}, {quoted: frpMsg})
           }else{
-            await sock.sendMessage(jid, {text: "Invalid param, correct format:\n.frp 62XXXXXXXXXXX|bot text|reply text"}, {quoted: formatMsg})
+            await sock.sendMessage(jid, {text: "Invalid param, correct format:\n.frp 62XXXXXXXXXXX|bot text|reply text"}, {quoted: msg})
           }
           break
       }
     }
+    
+    if(!cmdList.includes(text[0])) return
+    userData = await localdb.readDB(userId, false)
+    
+    switch(text[0]){
+      case '.menu':
+        await sock.sendMessage(jid, {text: menuText[0]}, {quoted: msg})
+        break
+      case '.sticker':
+      case '.s':
+        if(!msg.message.imageMessage && !msg.message.videoMessage){
+          await sock.sendMessage(jid, {text: 'No image found, please attach image'}, {quoted: msg})
+        }else if(msg.message.imageMessage){
+          sticker.fromImage(sock, jid, msg, downloadMediaMessage)
+        }else if(msg.message.videoMessage){
+          sticker.fromVideo(sock, jid, msg, downloadMediaMessage)
+        }
+        break
+      case '.whenyah':
+        await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
+        break
+      case '.afk':
+        await sock.sendMessage(jid, {text: 'You are now afk'}, {quoted: msg})
+        userData.isAfk = true
+        userData.afkTime = new Date().getTime()
+        break
+      case '.me':
+        let meInfo = `userId: ${userId}\n${JSON.stringify(userData, null, 2)}`
+        await sock.sendMessage(jid, {text: meInfo}, {quoted: msg})
+        break
+      case '.admin':
+        await sock.sendMessage(jid, {text: menuText[1]}, {quoted: msg})
+        break
+    }
+    
+    userData.token -= 1
+    await localdb.writeDB(userId, userData)
+    
   })
 }
 
