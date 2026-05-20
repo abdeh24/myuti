@@ -163,6 +163,9 @@ async function main(){
       case '.menu':
         await sock.sendMessage(jid, {text: menuText[0]}, {quoted: msg})
         break
+      case '.goon' :
+        await sock.sendMessage(jid, {text: 'lets goon...!'}, {quoted: msg})
+        break
       case '.sticker':
       case '.s':
         if(!msg.message.imageMessage && !msg.message.videoMessage){
