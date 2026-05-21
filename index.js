@@ -9,21 +9,38 @@ const util = require('util')
 
 const sticker = require('./lib/sticker')
 const localdb = require('./lib/localdbshit')
+const {download} = require('./lib/downloader')
 
 const execPromise = util.promisify(exec)
 
 const PHONE_NUMBER = process.env.PHONE_NUMBER
 const OWNER_PHONE_NUMBER = process.env.OWNER_PHONE_NUMBER
 
-const osInfo = `\`\`\`Server Info\`\`\`
+const osInfo = `
+\`\`\`Server Info\`\`\`
 > Platform: ${os.platform()}
 > Architecture: ${os.arch()}
 > Release: ${os.release()}
 > Hostname: ${os.hostname()}
 > Total Memory: ${(os.totalmem() / 1e9).toFixed(2)} GB
-> Free Memory: ${(os.freemem() / 1e9).toFixed(2)} GB`
+> Free Memory: ${(os.freemem() / 1e9).toFixed(2)} GB
+`
 
-const cmdList =['.menu', '.sticker', '.s', '.whenyah', '.admin', '.afk', '.me']
+const cmdList =[
+  '.menu',
+  '.sticker',
+  '.s',
+  '.whenyah',
+  '.admin',
+  '.afk',
+  '.me',
+  '.downloader',
+  '.ytd',
+  '.igd',
+  '.ttd',
+  '.fbd',
+  '.twd'
+  ]
 
 async function isUpdateExist(){
   try{
@@ -190,6 +207,34 @@ async function main(){
         break
       case '.admin':
         await sock.sendMessage(jid, {text: menuText[1]}, {quoted: msg})
+        break
+      case '.downloader':
+        await sock.sendMessage(jid, {text: menuText[2]}, {quoted: msg})
+        break
+      case '.ytd':
+      case '.igd':
+      case '.ttd':
+      case '.twd':
+      case '.fbd':
+        if(!text[1]){
+          await sock.sendMessage(jid, {text: `Please provide a link. Usage: ${text[0]} <link>`}, {quoted: msg})
+          break
+        }
+        const typeMap = {
+          '.ytd': 'yt',
+          '.igd': 'ig',
+          '.ttd': 'tt',
+          '.twd': 'x',
+          '.fbd': 'fb'
+        }
+        try{
+          await sock.sendMessage(jid, {text: "Fetching data, please wait..."}, {quoted: msg})
+          const dlResult = await download(typeMap[text[0]], text[1])
+          const resultString = typeof dlResult === 'object' ? JSON.stringify(dlResult, null, 2) : String(dlResult)
+          await sock.sendMessage(jid, {text: resultString}, {quoted: msg})
+        }catch(err){
+          await sock.sendMessage(jid, {text: "Failed to fetch download links. The link might be invalid or private."}, {quoted: msg})
+        }
         break
     }
     

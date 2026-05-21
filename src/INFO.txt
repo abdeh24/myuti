@@ -7,12 +7,23 @@
 > .sticker / .s <image/video/gif>
 > .whenyah <text>
 > .afk <text>
+> .downloader
 > .me
 > .admin
 
 ;
 >> Admin Commands
-> .info | _server info_
-> .lmk | _let myuti know and update if exist_
-> .kill | _will restart or kill itself (suicide)_
+> .info
+> .lmk
+> .kill
 > .frp <reply_number>|<bot_text>|<reply_text>
+
+;
+>> Downloader Commands
+*!! Make sure the url is not privated post !!*
+_btch-downloader_
+> .ytd <url> | youtube
+> .fbd <url> | facebook
+> .igd <url> | instagram
+> .ttd <url> | tiktok
+> .twd <url> | twitter/x

@@ -1,0 +1,4 @@
+node_modules/
+AUTH/
+.env
+src/user_db.json
