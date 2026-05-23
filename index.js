@@ -39,7 +39,8 @@ const cmdList =[
   '.igd',
   '.ttd',
   '.fbd',
-  '.twd'
+  '.twd',
+  '.goon'
   ]
 
 async function isUpdateExist(){
@@ -116,6 +117,7 @@ async function main(){
     
     const userId = msg.key.participantAlt || msg.key.remoteJidAlt || "error"
     let text = rawText.split(' ')
+    let tokenDecrement = 0
     
     if(!msg.key.fromMe){
       console.log(`${userId} | ${msg.pushName}\n> ${rawText}\n=================`)
@@ -128,7 +130,8 @@ async function main(){
         let msNow = new Date().getTime()
         let msResult = msNow - userData.afkTime
         let time = new Date(msResult).toISOString().slice(11, 19)
-        let afkMsg = `You've stopped afk, time of afk:\n*${time}*`
+        let afkReason = userData.afkReason
+        let afkMsg = `You've stopped afk with reason: *${afkReason}*\nAfk time: *${time}*`
         await sock.sendMessage(jid, {text: afkMsg}, {quoted: msg})
         
         userData.isAfk = false
@@ -182,6 +185,7 @@ async function main(){
         break
       case '.goon' :
         await sock.sendMessage(jid, {text: 'lets goon...!'}, {quoted: msg})
+        tokenDecrement = -67
         break
       case '.sticker':
       case '.s':
@@ -192,14 +196,19 @@ async function main(){
         }else if(msg.message.videoMessage){
           sticker.fromVideo(sock, jid, msg, downloadMediaMessage)
         }
+        tokenDecrement = 5
         break
       case '.whenyah':
         await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
+        tokenDecrement = 1
         break
       case '.afk':
-        await sock.sendMessage(jid, {text: 'You are now afk'}, {quoted: msg})
+        let fullText = text.slice(1).join(' ')
+        await sock.sendMessage(jid, {text: `You are now afk with reason:\n'${fullText}'`}, {quoted: msg})
         userData.isAfk = true
         userData.afkTime = new Date().getTime()
+        userData.afkReason = fullText
+        tokenDecrement = 1
         break
       case '.me':
         let meInfo = `userId: ${userId}\n${JSON.stringify(userData, null, 2)}`
@@ -210,6 +219,7 @@ async function main(){
         break
       case '.downloader':
         await sock.sendMessage(jid, {text: menuText[2]}, {quoted: msg})
+        tokenDecrement = 1
         break
       case '.ytd':
       case '.igd':
@@ -235,10 +245,11 @@ async function main(){
         }catch(err){
           await sock.sendMessage(jid, {text: "Failed to fetch download links. The link might be invalid or private."}, {quoted: msg})
         }
+        tokenDecrement = 5
         break
     }
     
-    userData.token -= 1
+    userData.token -= tokenDecrement
     await localdb.writeDB(userId, userData)
     
   })
