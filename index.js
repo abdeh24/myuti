@@ -27,6 +27,7 @@ const osInfo = `
 `
 
 const cmdList =[
+  '.about',
   '.menu',
   '.sticker',
   '.s',
@@ -131,7 +132,7 @@ async function main(){
         let msResult = msNow - userData.afkTime
         let time = new Date(msResult).toISOString().slice(11, 19)
         let afkReason = userData.afkReason
-        let afkMsg = `You've stopped afk with reason: *${afkReason}*\nAfk time: *${time}*`
+        let afkMsg = `You've stopped afk with reason:\n'*${afkReason}*'\nAfk time: *${time}*`
         await sock.sendMessage(jid, {text: afkMsg}, {quoted: msg})
         
         userData.isAfk = false
@@ -180,12 +181,15 @@ async function main(){
     userData = await localdb.readDB(userId, false)
     
     switch(text[0]){
+      case '.about':
+        await sock.sendMessage(jid, {text: menuText[3]}, {quoted: msg})
+        break
       case '.menu':
         await sock.sendMessage(jid, {text: menuText[0]}, {quoted: msg})
         break
       case '.goon' :
         await sock.sendMessage(jid, {text: 'lets goon...!'}, {quoted: msg})
-        tokenDecrement = -67
+        tokenDecrement = -5
         break
       case '.sticker':
       case '.s':
@@ -204,7 +208,7 @@ async function main(){
         break
       case '.afk':
         let fullText = text.slice(1).join(' ')
-        await sock.sendMessage(jid, {text: `You are now afk with reason:\n'${fullText}'`}, {quoted: msg})
+        await sock.sendMessage(jid, {text: `You are now afk with reason:\n'*${fullText}*'`}, {quoted: msg})
         userData.isAfk = true
         userData.afkTime = new Date().getTime()
         userData.afkReason = fullText

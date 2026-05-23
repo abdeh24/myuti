@@ -1,8 +1,9 @@
 
 >> ```Myuti WhatsApp Bot```
-> v0.0.6
+> v0.0.7
 
 >> Commands
+> .about
 > .menu
 > .sticker / .s <image/video/gif>
 > .whenyah <text>
@@ -27,3 +28,12 @@ _btch-downloader_
 > .igd <url> | instagram
 > .ttd <url> | tiktok
 > .twd <url> | twitter/x
+
+;
+>> About
+> Name: Myuti
+> Language: NodeJS
+> Dev: Abde
+> Site: abdf.qzz.io
+
+;
