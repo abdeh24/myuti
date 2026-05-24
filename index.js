@@ -132,7 +132,7 @@ async function main(){
         let msResult = msNow - userData.afkTime
         let time = new Date(msResult).toISOString().slice(11, 19)
         let afkReason = userData.afkReason
-        let afkMsg = `You've stopped afk with reason:\n'*${afkReason}*'\nAfk time: *${time}*`
+        let afkMsg = `You've stopped afk with reason:\n*'${afkReason}'*\nAfk time: *${time}*`
         await sock.sendMessage(jid, {text: afkMsg}, {quoted: msg})
         
         userData.isAfk = false
@@ -208,7 +208,7 @@ async function main(){
         break
       case '.afk':
         let fullText = text.slice(1).join(' ')
-        await sock.sendMessage(jid, {text: `You are now afk with reason:\n'*${fullText}*'`}, {quoted: msg})
+        await sock.sendMessage(jid, {text: `You are now afk with reason:\n*'${fullText}'*`}, {quoted: msg})
         userData.isAfk = true
         userData.afkTime = new Date().getTime()
         userData.afkReason = fullText
