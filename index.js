@@ -32,6 +32,7 @@ const cmdList =[
   '.sticker',
   '.s',
   '.whenyah',
+  'when',
   '.admin',
   '.afk',
   '.me',
@@ -203,6 +204,7 @@ async function main(){
         tokenDecrement = 5
         break
       case '.whenyah':
+      case 'when' :
         await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
         tokenDecrement = 1
         break
