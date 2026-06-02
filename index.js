@@ -131,9 +131,18 @@ async function main(){
       if(userData.isAfk == true){
         let msNow = new Date().getTime()
         let msResult = msNow - userData.afkTime
+        
+        let days = Math.floor(msResult / (1000 * 60 * 60 * 24))
         let time = new Date(msResult).toISOString().slice(11, 19)
+        
+        let timeString = days > 0 ? `${days} days, ${time}` : time
+        
         let afkReason = userData.afkReason
-        let afkMsg = `You've stopped afk with reason:\n*'${afkReason}'*\nAfk time: *${time}*`
+        if(afkReason == ''){
+          let afkMsg = `You've stopped afk with no reason.\nAfk time: *${timeString}*`
+        }else{
+          let afkMsg = `You've stopped afk with reason:\n*'${afkReason}'*\nAfk time: *${timeString}*`
+        }
         await sock.sendMessage(jid, {text: afkMsg}, {quoted: msg})
         
         userData.isAfk = false
@@ -204,13 +213,19 @@ async function main(){
         tokenDecrement = 5
         break
       case '.whenyah':
-      case 'when' :
+      case 'when':
         await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
         tokenDecrement = 1
         break
       case '.afk':
         let fullText = text.slice(1).join(' ')
-        await sock.sendMessage(jid, {text: `You are now afk with reason:\n*'${fullText}'*`}, {quoted: msg})
+        let responseText = ''
+        if(fullText == ''){
+          responseText = `You are now afk with no reason.`
+        }else{
+          responseText = `You are now afk with reason:\n*${fullText}*`
+        }
+        await sock.sendMessage(jid, {text: responseText}, {quoted: msg})
         userData.isAfk = true
         userData.afkTime = new Date().getTime()
         userData.afkReason = fullText
