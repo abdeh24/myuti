@@ -138,10 +138,11 @@ async function main(){
         let timeString = days > 0 ? `${days} days, ${time}` : time
         
         let afkReason = userData.afkReason
+        let afkMsg = ''
         if(afkReason == ''){
-          let afkMsg = `You've stopped afk with no reason.\nAfk time: *${timeString}*`
+          afkMsg = `You've stopped afk with no reason.\nAfk time: *${timeString}*`
         }else{
-          let afkMsg = `You've stopped afk with reason:\n*'${afkReason}'*\nAfk time: *${timeString}*`
+          afkMsg = `You've stopped afk with reason:\n*${afkReason}*\nAfk time: *${timeString}*`
         }
         await sock.sendMessage(jid, {text: afkMsg}, {quoted: msg})
         
