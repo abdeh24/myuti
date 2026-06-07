@@ -5,7 +5,8 @@ WhatsApp bot open source project built with Node.js using WhiskeySockets/Baileys
 ## Features
 
 - Image/Video/Gif to Sticker
-- More coming soon
+- Roblox Avatar Downloader
+- Video Downloader
 
 ## Needed
 You need these in your system installed:
@@ -25,10 +26,16 @@ You need these in your system installed:
   npm install
   ```
 
+! OPTIONAL !
+for ```RBX_KEY```
+you can create your API KEY in https://create.roblox.com/dashboard/credentials
+with thumbnails:read Access Permissions enabled
+
 3. Create your .env
   ```env
   PHONE_NUMBER=6200000000000
   OWNER_PHONE_NUMBER=6200000000000
+  RBX_KEY="if you use .rbx, you need this"
   ```
 
 4. Start the bot:

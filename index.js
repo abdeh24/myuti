@@ -290,7 +290,7 @@ async function main(){
           mimetype: 'application/zip',
           fileName: info[1],
           caption: info[0]
-        })
+        }, {quoted: msg})
         tokenDecrement = 10
         break
     }
