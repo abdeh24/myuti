@@ -6,44 +6,42 @@ WhatsApp bot open source project built with Node.js using WhiskeySockets/Baileys
 
 - Image/Video/Gif to Sticker
 - Roblox Avatar Downloader
-- Video Downloader
+- Video/Audio Downloader
 
-## Needed
-You need these in your system installed:
+## Prerequisites
+
+You need these installed on your system:
 - Node.js
 - FFmpeg
 
-## How to
+## Installation
 
 1. Clone the repository:
-  ```bash
-  git clone https://github.com/abdeh24/myuti.git
-  cd myuti
-  ```
+   ```bash
+   git clone https://github.com/abdeh24/myuti.git
+   cd myuti
+   ```
 
 2. Install dependencies:
-  ```bash
-  npm install
-  ```
+   ```bash
+   npm install
+   ```
 
-! OPTIONAL !
-for ```RBX_KEY```
-you can create your API KEY in https://create.roblox.com/dashboard/credentials
-with thumbnails:read Access Permissions enabled
+3. Create your `.env` file:
+   ```env
+   PHONE_NUMBER=6200000000000
+   OWNER_PHONE_NUMBER=6200000000000
+   RBX_KEY=your_api_key_here
+   ```
 
-3. Create your .env
-  ```env
-  PHONE_NUMBER=6200000000000
-  OWNER_PHONE_NUMBER=6200000000000
-  RBX_KEY="if you use .rbx, you need this"
-  ```
+   **Optional:** To use Roblox features, create an API key at https://create.roblox.com/dashboard/credentials with `thumbnails:read` access permissions enabled.
 
 4. Start the bot:
-  ```bash
-  npm start
-  ```
+   ```bash
+   npm start
+   ```
 
-note: After you start the bot you will be asked to input the pairing code to your WhatsApp
+   > **Note:** After starting the bot, you will be prompted to enter the pairing code from your WhatsApp account.
 
 ## Tech Stack
 
