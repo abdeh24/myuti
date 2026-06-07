@@ -10,11 +10,13 @@ const util = require('util')
 const sticker = require('./lib/sticker')
 const localdb = require('./lib/localdbshit')
 const {download} = require('./lib/downloader')
+const rbx = require('./lib/rbx')
 
 const execPromise = util.promisify(exec)
 
 const PHONE_NUMBER = process.env.PHONE_NUMBER
 const OWNER_PHONE_NUMBER = process.env.OWNER_PHONE_NUMBER
+const RBX_KEY = process.env.RBX_KEY
 
 const osInfo = `
 \`\`\`Server Info\`\`\`
@@ -42,7 +44,8 @@ const cmdList =[
   '.ttd',
   '.fbd',
   '.twd',
-  '.goon'
+  '.goon',
+  '.rbx'
   ]
 
 async function isUpdateExist(){
@@ -268,6 +271,27 @@ async function main(){
           await sock.sendMessage(jid, {text: "Failed to fetch download links. The link might be invalid or private."}, {quoted: msg})
         }
         tokenDecrement = 5
+        break
+      case '.rbx':
+        if(!text[1]){
+          await sock.sendMessage(jid, {text: `Please provide Roblox Username. Usage: .rbx Roblox`}, {quoted: msg})
+          break
+        }
+        await sock.sendMessage(jid, {text: 'Please wait...'}, {quoted: msg})
+        
+        let info = await rbx.download(text[1], RBX_KEY)
+        
+        if(info[2] == "None"){
+          await sock.sendMessage(jid, {text: info[0]}, {quoted: msg})
+          break
+        }
+        await sock.sendMessage(jid, {
+          document: fs.readFileSync(`src/tmp/${info[1]}`),
+          mimetype: 'application/zip',
+          fileName: info[1],
+          caption: info[0]
+        })
+        tokenDecrement = 10
         break
     }
     

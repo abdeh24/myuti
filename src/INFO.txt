@@ -1,6 +1,6 @@
 
 >> ```Myuti WhatsApp Bot```
-> v0.0.9
+> v0.1.0
 
 >> Commands
 > .about
@@ -9,6 +9,7 @@
 > .whenyah <text>
 > .afk <text>
 > .downloader
+> .rbx <username>
 > .me
 > .admin
 
