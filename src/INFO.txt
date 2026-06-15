@@ -1,6 +1,6 @@
 
 >> ```Myuti WhatsApp Bot```
-> v0.1.1
+> v0.1.2
 
 >> Commands
 > .about
@@ -12,6 +12,7 @@
 > .rbx <username>
 > .me
 > .admin
+> .support
 
 ;
 >> Admin Commands
@@ -40,15 +41,17 @@ _btch-downloader_
 ;
 >> Support
 Donate?
-USDT: *TRC 20 Net* TMoVko1QaJT2yFyoR1qDziayNAQVcx58Lv
+
+USDT: *TRC 20 Network*
+Address: TMoVko1QaJT2yFyoR1qDziayNAQVcx58Lv
 
 or
 
 link-hub.net/3602015/whsK4iQHGIEJ
 
 Kindly open this Linkvertise and finish it :3
-It will help me a lot
--Well not much as giving direct money to me-
+It will help me a lot  ^^
+~Well not much as giving direct money to me~
 
 Report bug?
 Create new issue here
