@@ -45,7 +45,8 @@ const cmdList =[
   '.fbd',
   '.twd',
   '.goon',
-  '.rbx'
+  '.rbx',
+  '.support'
   ]
 
 async function isUpdateExist(){
@@ -241,6 +242,9 @@ async function main(){
         break
       case '.admin':
         await sock.sendMessage(jid, {text: menuText[1]}, {quoted: msg})
+        break
+      case '.support':
+        await sock.sendMessage(jid, {text: menuText[4]}, {quoted: msg})
         break
       case '.downloader':
         await sock.sendMessage(jid, {text: menuText[2]}, {quoted: msg})
