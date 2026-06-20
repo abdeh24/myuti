@@ -278,24 +278,30 @@ async function main(){
         break
       case '.rbx':
         if(!text[1]){
-          await sock.sendMessage(jid, {text: `Please provide Roblox Username. Usage: .rbx Roblox`}, {quoted: msg})
+          await sock.sendMessage(jid, {text: `Please provide Roblox Username. Usage: .rbx Abde_4803`}, {quoted: msg})
           break
         }
         await sock.sendMessage(jid, {text: 'Please wait...'}, {quoted: msg})
         
         let info = await rbx.download(text[1], RBX_KEY)
         
-        if(info[2] == "None"){
+        if(info[2] == "None" || info[2] == "Error"){
           await sock.sendMessage(jid, {text: info[0]}, {quoted: msg})
           break
         }
-        await sock.sendMessage(jid, {
-          document: fs.readFileSync(`src/tmp/${info[1]}`),
-          mimetype: 'application/zip',
-          fileName: info[1],
-          caption: info[0]
-        }, {quoted: msg})
-        tokenDecrement = 10
+        
+        try{
+          await sock.sendMessage(jid, {
+            document: fs.readFileSync(`src/tmp/${info[1]}`),
+            mimetype: 'application/zip',
+            fileName: info[1],
+            caption: info[0]
+          }, {quoted: msg})
+          tokenDecrement = 10
+        }catch(err){
+          console.error("Failed to read zip file:", err)
+          await sock.sendMessage(jid, {text: "Failed to send the file. It may be corrupted or missing."}, {quoted: msg})
+        }
         break
     }
     
