@@ -323,8 +323,7 @@ async function main(){
         }
         break
     }
-    
-    userData.token -= tokenDecrement
+    userData.token = Number((userData.token - tokenDecrement).toFixed(2))
     await localdb.writeDB(userId, userData)
     
   })
