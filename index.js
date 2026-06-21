@@ -295,11 +295,11 @@ async function main(){
           '.twd': 'x',
           '.fbd': 'fb'
         }
+        await sock.sendMessage(jid, {text: "Fetching data, please wait..."}, {quoted: msg})
         try{
-          await simulateTyping(sock, jid, 2000)
-          await sock.sendMessage(jid, {text: "Fetching data, please wait..."}, {quoted: msg})
           const dlResult = await download(typeMap[text[0]], text[1])
           const resultString = typeof dlResult === 'object' ? JSON.stringify(dlResult, null, 2) : String(dlResult)
+          await simulateTyping(sock, jid, 2000)
           await sock.sendMessage(jid, {text: resultString}, {quoted: msg})
         }catch(err){
           await sock.sendMessage(jid, {text: "Failed to fetch download links. The link might be invalid or private."}, {quoted: msg})
