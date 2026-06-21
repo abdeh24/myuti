@@ -253,21 +253,21 @@ async function main(){
         tokenDecrement = 1
         break
       case '.roll':
-        if(!text[1] || isNaN(parseInt(text[1]))){
-          await sock.sendMessage(jid, {text: `Please input how much token you want to roll.\nUsage: ${text[0]} <number>`}, {quoted: msg})
+        if(!text[1] || isNaN(parseFloat(text[1]))){
+          await sock.sendMessage(jid, {text: `Please input how much token you want to roll.\nUsage: ${text} <number>`}, {quoted: msg})
           break
         }
         
-        let tokenToUse = parseInt(text[1])
-        if(tokenToUse <= 0 || tokenToUse > userData.token || Number.isInteger(tokenToUse) == false){
+        let tokenToUse = parseFloat(text[1])
+        if(tokenToUse <= 0 || tokenToUse > userData.token){
           await sock.sendMessage(jid, {text: `Invalid token input or not enough token.\nYou have *${userData.token} token*.`}, {quoted: msg})
           break
         }
-        let mult = Math.floor(Math.random() * 21) / 10
-        let final = Math.floor(tokenToUse * mult)
+        let mult = Math.floor(Math.random() * 301) / 100
+        let final = Math.floor(Number((tokenToUse * mult).toFixed(2)) * 100) / 100
         
-        await sock.sendMessage(jid, {text: `You got *${final} token*!\n*${tokenToUse}* * *${mult}x* = *${final}`}, {quoted: msg})
-        tokenDecrement = tokenToUse - final
+        await sock.sendMessage(jid, {text: `You got *${final} token*!\n*${tokenToUse}* * *${mult}x* = *${final}*`}, {quoted: msg})
+        tokenDecrement = Math.floor(Number((tokenToUse - final).toFixed(2)) * 100) / 100
         break
       case '.ytd':
       case '.igd':
