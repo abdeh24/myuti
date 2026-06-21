@@ -46,7 +46,8 @@ const cmdList =[
   '.twd',
   '.goon',
   '.rbx',
-  '.support'
+  '.support',
+  '.roll'
   ]
 
 async function isUpdateExist(){
@@ -237,8 +238,12 @@ async function main(){
         tokenDecrement = 1
         break
       case '.me':
-        let meInfo = `userId: ${userId}\n${JSON.stringify(userData, null, 2)}`
-        await sock.sendMessage(jid, {text: meInfo}, {quoted: msg})
+        let meNum = `@${userId.replace('@s.whatsapp.net')}`
+        let meMsg = `
+        User: ${meNum}
+        Token: *${userData.token}*
+        LastAfkReason: *${userData.afkReason}*`
+        await sock.sendMessage(jid, {text: meMsg, mentions: [userId]}, {quoted: msg})
         break
       case '.admin':
         await sock.sendMessage(jid, {text: menuText[1]}, {quoted: msg})
@@ -249,6 +254,23 @@ async function main(){
       case '.downloader':
         await sock.sendMessage(jid, {text: menuText[2]}, {quoted: msg})
         tokenDecrement = 1
+        break
+      case '.roll':
+        if(!text[1] || parseInt(text[1]) == NaN){
+          await sock.sendMessage(jid, {text: `Please input how much token you want to roll. Usage: ${text[0]} <number>`}, {quoted: msg})
+          break
+        }
+        
+        let tokenToUse = parseInt(text[1])
+        if(tokenToUse <= 0 || tokenToUse > userData.token){
+          await sock.sendMessage(jid, {text: `Invalid token input or not enough token, you have *${userData.token} token*.`}, {quoted: msg})
+          break
+        }
+        let mult = Math.floor(Math.random() * 21) / 10
+        let final = tokenToUse * mult
+        
+        await sock.sendMessage(jid, {text: `You got *${final} token*!\n*${tokenToUse}* * *${mult}x* = *${final}`}, {quoted: msg})
+        tokenDecrement = tokenToUse - final
         break
       case '.ytd':
       case '.igd':
