@@ -238,11 +238,8 @@ async function main(){
         tokenDecrement = 1
         break
       case '.me':
-        let meNum = `@${userId.replace('@s.whatsapp.net')}`
-        let meMsg = `
-        User: ${meNum}
-        Token: *${userData.token}*
-        LastAfkReason: *${userData.afkReason}*`
+        let meNum = `@${userId.replace('@s.whatsapp.net', '')}`
+        let meMsg = `User: ${meNum}\nToken: *${userData.token}*\nLastAfkReason: *${userData.afkReason}*`
         await sock.sendMessage(jid, {text: meMsg, mentions: [userId]}, {quoted: msg})
         break
       case '.admin':
@@ -256,18 +253,18 @@ async function main(){
         tokenDecrement = 1
         break
       case '.roll':
-        if(!text[1] || parseInt(text[1]) == NaN){
-          await sock.sendMessage(jid, {text: `Please input how much token you want to roll. Usage: ${text[0]} <number>`}, {quoted: msg})
+        if(!text[1] || isNaN(parseInt(text[1]))){
+          await sock.sendMessage(jid, {text: `Please input how much token you want to roll.\nUsage: ${text[0]} <number>`}, {quoted: msg})
           break
         }
         
         let tokenToUse = parseInt(text[1])
-        if(tokenToUse <= 0 || tokenToUse > userData.token){
-          await sock.sendMessage(jid, {text: `Invalid token input or not enough token, you have *${userData.token} token*.`}, {quoted: msg})
+        if(tokenToUse <= 0 || tokenToUse > userData.token || Number.isInteger(tokenToUse) == false){
+          await sock.sendMessage(jid, {text: `Invalid token input or not enough token.\nYou have *${userData.token} token*.`}, {quoted: msg})
           break
         }
         let mult = Math.floor(Math.random() * 21) / 10
-        let final = tokenToUse * mult
+        let final = Math.floor(tokenToUse * mult)
         
         await sock.sendMessage(jid, {text: `You got *${final} token*!\n*${tokenToUse}* * *${mult}x* = *${final}`}, {quoted: msg})
         tokenDecrement = tokenToUse - final
