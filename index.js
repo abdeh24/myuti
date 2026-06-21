@@ -47,7 +47,8 @@ const cmdList =[
   '.goon',
   '.rbx',
   '.support',
-  '.roll'
+  '.roll',
+  '.leaderboard'
   ]
 
 async function simulateTyping(sock, jid, duration = 1500) {
@@ -155,9 +156,13 @@ async function main(){
           afkMsg = `You've stopped afk with reason:\n*${afkReason}*\nAfk time: *${timeString}*`
         }
         await sock.sendMessage(jid, {text: afkMsg}, {quoted: msg})
-        
+        if(userData.longestAfkTime < msResult){
+          userData.longestAfkTime = msResult
+          console.log(`\n\n\n${userData.longestAfkTime}\n\n\n`)
+        }
+        console.log(`\n\n\n${msResult}\n\n\n`)
         userData.isAfk = false
-        await localdb.writeDB(userId, {isAfk: false, afkTime: 0})
+        await localdb.writeDB(userId, userData)
       }
     }
     
@@ -173,10 +178,10 @@ async function main(){
           console.log(log)
           await sock.sendMessage(jid, {text: log}, {quoted: msg})
           break
-      case '.info':
+        case '.info':
           await sock.sendMessage(jid, {text: osInfo}, {quoted: msg})
           break
-      case '.frp':
+        case '.frp':
           let frpText = (text.slice(1).join(" ")).split("|")
           if(frpText.length == 3){
             let frpMsg = {
@@ -306,6 +311,11 @@ async function main(){
         }
         tokenDecrement = 5
         break
+      case '.leaderboard':
+        await localdb.updateLeaderboards()
+        leaderboard = fs.readFileSync('./src/leaderboard.txt', 'utf8')
+        await sock.sendMessage(jid, {text: leaderboard}, {quoted: msg})
+        break
       case '.rbx':
         if(!text[1]){
           await sock.sendMessage(jid, {text: `Please provide Roblox Username. Usage: .rbx Abde_4803`}, {quoted: msg})
@@ -335,6 +345,7 @@ async function main(){
         }
         break
     }
+    userData.username = msg.pushName
     userData.token = Number((userData.token - tokenDecrement).toFixed(2))
     await localdb.writeDB(userId, userData)
     
