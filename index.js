@@ -28,6 +28,10 @@ const osInfo = `
 > Free Memory: ${(os.freemem() / 1e9).toFixed(2)} GB
 `
 
+
+const userCooldowns = new Map()
+const COOLDOWN_TIME = 2500
+
 const cmdList =[
   '.about',
   '.menu',
@@ -204,6 +208,15 @@ async function main(){
     }
     
     if(!cmdList.includes(text[0])) return
+    const currentTime = Date.now()
+    if (userCooldowns.has(userId)){
+      const expirationTime = userCooldowns.get(userId) + COOLDOWN_TIME
+      if(currentTime < expirationTime){
+        return
+      }
+    }
+    userCooldowns.set(userId, currentTime)
+
     userData = await localdb.readDB(userId, false)
     
     switch(text[0]){
@@ -269,7 +282,7 @@ async function main(){
         break
       case '.roll':
         if(!text[1] || isNaN(parseFloat(text[1]))){
-          await sock.sendMessage(jid, {text: `Please input how much token you want to roll.\nUsage: ${text} <number>`}, {quoted: msg})
+          await sock.sendMessage(jid, {text: `Please input how much token you want to roll.\nUsage: ${text[0]} <number>`}, {quoted: msg})
           break
         }
         
@@ -278,7 +291,7 @@ async function main(){
           await sock.sendMessage(jid, {text: `Invalid token input or not enough token.\nYou have *${userData.token} token*.`}, {quoted: msg})
           break
         }
-        let mult = Math.floor(Math.random() * 301) / 100
+        let mult = Math.floor(Math.random() * 201) / 100
         let final = Math.floor(Number((tokenToUse * mult).toFixed(2)) * 100) / 100
         await simulateTyping(sock, jid, 1000) 
         await sock.sendMessage(jid, {text: `You got *${final} token*!\n*${tokenToUse}* * *${mult}x* = *${final}*`}, {quoted: msg})
@@ -306,15 +319,15 @@ async function main(){
           const resultString = typeof dlResult === 'object' ? JSON.stringify(dlResult, null, 2) : String(dlResult)
           await simulateTyping(sock, jid, 2000)
           await sock.sendMessage(jid, {text: resultString}, {quoted: msg})
+          tokenDecrement = 10
         }catch(err){
           await sock.sendMessage(jid, {text: "Failed to fetch download links. The link might be invalid or private."}, {quoted: msg})
         }
-        tokenDecrement = 5
         break
       case '.leaderboard':
-        await localdb.updateLeaderboards()
-        leaderboard = fs.readFileSync('./src/leaderboard.txt', 'utf8')
-        await sock.sendMessage(jid, {text: leaderboard}, {quoted: msg})
+        await simulateTyping(sock, jid, 2000)
+        let leaderboardText = await localdb.updateLeaderboards(userData.username)
+        await sock.sendMessage(jid, {text: leaderboardText}, {quoted: msg})
         break
       case '.rbx':
         if(!text[1]){

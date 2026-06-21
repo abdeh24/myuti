@@ -1,19 +1,20 @@
 
 >> ```Myuti WhatsApp Bot```
-> v0.1.5
+> v0.1.7
 
 >> Commands
 > .about
 > .menu
+> .afk <text>
 > .sticker / .s <image/video/gif>
 > .whenyah <text>
-> .afk <text>
 > .downloader
 > .rbx <username>
 > .roll <token>
 > .me
-> .admin
+> .leaderboard
 > .support
+> .admin
 
 ;
 >> Admin Commands
