@@ -2,4 +2,6 @@ node_modules/
 AUTH/
 .env
 src/user_db.json
+src/leaderboard.txt
 src/tmp/
+lib/t3.js
