@@ -50,6 +50,11 @@ const cmdList =[
   '.roll'
   ]
 
+async function simulateTyping(sock, jid, duration = 1500) {
+  await sock.sendPresenceUpdate('composing', jid)
+  await new Promise(resolve => setTimeout(resolve, duration))
+}
+
 async function isUpdateExist(){
   try{
     const {stdout} = await execPromise('git pull')
@@ -198,9 +203,11 @@ async function main(){
     
     switch(text[0]){
       case '.about':
+        await simulateTyping(sock, jid, 1000)
         await sock.sendMessage(jid, {text: menuText[3]}, {quoted: msg})
         break
       case '.menu':
+        await simulateTyping(sock, jid, 1000)
         await sock.sendMessage(jid, {text: menuText[0]}, {quoted: msg})
         break
       case '.goon' :
@@ -243,12 +250,15 @@ async function main(){
         await sock.sendMessage(jid, {text: meMsg, mentions: [userId]}, {quoted: msg})
         break
       case '.admin':
+        await simulateTyping(sock, jid, 1000)
         await sock.sendMessage(jid, {text: menuText[1]}, {quoted: msg})
         break
       case '.support':
+        await simulateTyping(sock, jid, 1000)
         await sock.sendMessage(jid, {text: menuText[4]}, {quoted: msg})
         break
       case '.downloader':
+        await simulateTyping(sock, jid, 1000)
         await sock.sendMessage(jid, {text: menuText[2]}, {quoted: msg})
         tokenDecrement = 1
         break
@@ -265,7 +275,7 @@ async function main(){
         }
         let mult = Math.floor(Math.random() * 301) / 100
         let final = Math.floor(Number((tokenToUse * mult).toFixed(2)) * 100) / 100
-        
+        await simulateTyping(sock, jid, 1000) 
         await sock.sendMessage(jid, {text: `You got *${final} token*!\n*${tokenToUse}* * *${mult}x* = *${final}*`}, {quoted: msg})
         tokenDecrement = Math.floor(Number((tokenToUse - final).toFixed(2)) * 100) / 100
         break
@@ -286,6 +296,7 @@ async function main(){
           '.fbd': 'fb'
         }
         try{
+          await simulateTyping(sock, jid, 2000)
           await sock.sendMessage(jid, {text: "Fetching data, please wait..."}, {quoted: msg})
           const dlResult = await download(typeMap[text[0]], text[1])
           const resultString = typeof dlResult === 'object' ? JSON.stringify(dlResult, null, 2) : String(dlResult)
@@ -309,6 +320,7 @@ async function main(){
           break
         }
         
+        await simulateTyping(sock, jid, 2000)
         try{
           await sock.sendMessage(jid, {
             document: fs.readFileSync(`src/tmp/${info[1]}`),
