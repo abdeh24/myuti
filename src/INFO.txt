@@ -1,6 +1,6 @@
 
 >> ```Myuti WhatsApp Bot```
-> v0.2.5
+> v0.3.0
 
 >> Commands
 > .about
@@ -12,6 +12,8 @@
 > .rbx <username>
 > .roll <token>
 > .ttt
+> .freetoken (250)
+> .claim <code>
 > .me
 > .leaderboard
 > .support

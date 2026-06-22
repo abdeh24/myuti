@@ -12,12 +12,14 @@ const localdb = require('./lib/localdbshit')
 const {download} = require('./lib/downloader')
 const rbx = require('./lib/rbx')
 const ttt = require('./lib/ttt')
+const monetize = require('./lib/monetize')
 
 const execPromise = util.promisify(exec)
 
 const PHONE_NUMBER = process.env.PHONE_NUMBER
 const OWNER_PHONE_NUMBER = process.env.OWNER_PHONE_NUMBER
 const RBX_KEY = process.env.RBX_KEY
+const SAFELINKU_TOKEN = process.env.SAFELINKU_TOKEN 
 
 const osInfo = `
 \`\`\`Server Info\`\`\`
@@ -53,7 +55,9 @@ const cmdList =[
   '.support',
   '.roll',
   '.leaderboard',
-  '.ttt'
+  '.ttt',
+  '.freetoken',
+  '.claim'
   ]
 
 async function simulateTyping(sock, jid, duration = 1500) {
@@ -481,6 +485,42 @@ async function main(){
           const boardText = ttt.renderBoard(newRoomId, dbTTT[newRoomId])
           await sock.sendMessage(jid, {text: boardText, mentions: [userId]})
         }
+        break
+      case '.freetoken':
+        const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+        userData.claimCode = code
+        await localdb.writeDB(userId, userData)
+
+        const targetUrl = `https://api.whatsapp.com/send?phone=${PHONE_NUMBER}&text=.claim%20${code}`
+        
+        await sock.sendMessage(jid, {text: 'Generating 250 token link...'}, {quoted: msg})
+
+        const shortLink = await monetize.generateSafelink(targetUrl, SAFELINKU_TOKEN)
+
+        if(!shortLink){
+          await sock.sendMessage(jid, {text: 'Failed to generate link, try again later...'}, {quoted: msg})
+          break
+        }
+
+        await sock.sendMessage(jid, {text: `Complete this link and send the message to get free 250 tokens :3\n*${shortLink}*`}, {quoted: msg})
+        break
+
+      case '.claim':
+        if(!text[1]){
+          await sock.sendMessage(jid, {text: `Usage: .claim <code>`}, {quoted: msg})
+          break
+        }
+
+        if(!userData.claimCode || userData.claimCode !== text[1]){
+          await sock.sendMessage(jid, {text: `Code expired, did not exist, or the code is not for you!`}, {quoted: msg})
+          break
+        }
+
+        userData.token += 250
+        userData.claimCode = ""
+        await localdb.writeDB(userId, userData)
+
+        await sock.sendMessage(jid, {text: `Your Tokens: ${userData.token}`}, {quoted: msg})
         break
     }
     userData.username = msg.pushName
