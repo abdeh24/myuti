@@ -4,9 +4,17 @@ WhatsApp bot open source project built with Node.js using WhiskeySockets/Baileys
 
 ## Features
 
+### Tools
+
 - Image/Video/Gif to Sticker
 - Roblox Avatar Downloader
 - Video/Audio Downloader
+
+### Games
+
+- Afk,
+- Roll token, gamble away your precious token
+- TikTakTo, XOXOXOXOXOXOXOXOXO
 
 ## Prerequisites
 

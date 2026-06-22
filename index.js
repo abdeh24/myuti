@@ -11,6 +11,7 @@ const sticker = require('./lib/sticker')
 const localdb = require('./lib/localdbshit')
 const {download} = require('./lib/downloader')
 const rbx = require('./lib/rbx')
+const ttt = require('./lib/ttt')
 
 const execPromise = util.promisify(exec)
 
@@ -27,7 +28,6 @@ const osInfo = `
 > Total Memory: ${(os.totalmem() / 1e9).toFixed(2)} GB
 > Free Memory: ${(os.freemem() / 1e9).toFixed(2)} GB
 `
-
 
 const userCooldowns = new Map()
 const COOLDOWN_TIME = 2500
@@ -52,7 +52,8 @@ const cmdList =[
   '.rbx',
   '.support',
   '.roll',
-  '.leaderboard'
+  '.leaderboard',
+  '.ttt'
   ]
 
 async function simulateTyping(sock, jid, duration = 1500) {
@@ -76,6 +77,7 @@ async function isUpdateExist(){
 
 async function main(){
   await localdb.checkDB()
+  await ttt.checkTTTDB()
   let menuText = ''
   try{
     menuText = fs.readFileSync('./src/INFO.txt', 'utf8')
@@ -140,8 +142,71 @@ async function main(){
       console.log(`${userId} | ${msg.pushName}\n> ${rawText}\n=================`)
     }
     const jid = msg.key.remoteJid
-    
     let userData = await localdb.readDB(userId, true)
+
+    const moveMatch = rawText.match(/^[1-9]$/)
+    if(moveMatch && userData && userData.isInT3){
+      const position = parseInt(rawText) - 1
+      const dbTTT = await ttt.readTTT()
+      const room = dbTTT[userData.t3RoomID]
+
+      if(room){
+        if(room.player[room.turn] !== userId){
+          await sock.sendMessage(jid, {text: "It is not your turn!"}, {quoted: msg})
+          return
+        }
+        if(room.board[position] !== " "){
+          await sock.sendMessage(jid, {text: "That spot is already taken!"}, {quoted: msg})
+          return
+        }
+
+        room.board[position] = room.turn
+        
+        const winner = ttt.checkWin(room.board)
+        const isDraw = ttt.checkDraw(room.board)
+
+        if(winner !== null){
+          const boardText = ttt.renderBoard(userData.t3RoomID, room)
+          await sock.sendMessage(jid, {text: `${boardText}\n\n@${userId.split('@')[0]} wins the game!`, mentions: room.player})
+          
+          for(let p of room.player){
+            let pData = await localdb.readDB(p, false)
+            pData.isInT3 = false
+            pData.t3RoomID = 0
+            if(p == userId){
+              pData.tttWin = (pData.tttWin || 0) + 1 
+            }
+            await localdb.writeDB(p, pData)
+          }
+          delete dbTTT[userData.t3RoomID]
+          await ttt.writeTTT(dbTTT)
+          return
+        }
+
+        if(isDraw){
+          const boardText = ttt.renderBoard(userData.t3RoomID, room)
+          await sock.sendMessage(jid, {text: `${boardText}\n\nThe game is a draw!`, mentions: room.player})
+          
+          for(let p of room.player){
+            let pData = await localdb.readDB(p, false)
+            pData.isInT3 = false
+            pData.t3RoomID = 0
+            await localdb.writeDB(p, pData)
+          }
+          delete dbTTT[userData.t3RoomID]
+          await ttt.writeTTT(dbTTT)
+          return
+        }
+
+        room.turn = room.turn === 0 ? 1 : 0
+        await ttt.writeTTT(dbTTT)
+
+        const boardText = ttt.renderBoard(userData.t3RoomID, room)
+        await sock.sendMessage(jid, {text: boardText, mentions: room.player})
+        return 
+      }
+    }
+
     if(userData){
       if(userData.isAfk == true){
         let msNow = new Date().getTime()
@@ -169,7 +234,6 @@ async function main(){
         await localdb.writeDB(userId, userData)
       }
     }
-    
     
     if(userId == `${OWNER_PHONE_NUMBER}@s.whatsapp.net`){
       switch(text[0]){
@@ -355,6 +419,50 @@ async function main(){
         }catch(err){
           console.error("Failed to read zip file:", err)
           await sock.sendMessage(jid, {text: "Failed to send the file. It may be corrupted or missing."}, {quoted: msg})
+        }
+        break
+      case '.ttt':
+        if (userData.isInT3) {
+          await sock.sendMessage(jid, {text: `You are already in a match! Room ID: ${userData.t3RoomID}`}, {quoted: msg})
+          break
+        }
+
+        const dbTTT = await ttt.readTTT()
+        let foundRoomId = null
+        
+        for(const [id, data] of Object.entries(dbTTT)){
+          if(data.player.length === 1){
+            foundRoomId = id
+            break
+          }
+        }
+
+        if(foundRoomId){
+          dbTTT[foundRoomId].player.push(userId)
+          userData.isInT3 = true
+          userData.t3RoomID = foundRoomId
+          
+          await ttt.writeTTT(dbTTT)
+          await localdb.writeDB(userId, userData)
+
+          const boardText = ttt.renderBoard(foundRoomId, dbTTT[foundRoomId])
+          await sock.sendMessage(jid, {text: `Match found!\n\n${boardText}`, mentions: dbTTT[foundRoomId].player})
+        }else{
+          const newRoomId = Math.floor(10000000 + Math.random() * 90000000).toString()
+          dbTTT[newRoomId] = {
+            board: [" ", " ", " ", " ", " ", " ", " ", " ", " "],
+            turn: 0,
+            player: [userId]
+          }
+          
+          userData.isInT3 = true
+          userData.t3RoomID = newRoomId
+          
+          await ttt.writeTTT(dbTTT)
+          await localdb.writeDB(userId, userData)
+
+          const boardText = ttt.renderBoard(newRoomId, dbTTT[newRoomId])
+          await sock.sendMessage(jid, {text: boardText, mentions: [userId]})
         }
         break
     }
