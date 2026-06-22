@@ -12,7 +12,7 @@ WhatsApp bot open source project built with Node.js using WhiskeySockets/Baileys
 
 ### Games
 
-- Afk,
+- Afk, that one guy who never join in conversation
 - Roll token, gamble away your precious token
 - TikTakTo, XOXOXOXOXOXOXOXOXO
 

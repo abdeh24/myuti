@@ -145,7 +145,24 @@ async function main(){
     let userData = await localdb.readDB(userId, true)
 
     const moveMatch = rawText.match(/^[1-9]$/)
-    if(moveMatch && userData && userData.isInT3){
+    if(text[0] == '.resign' && userData && userData.isInT3){
+      const dbTTT = await ttt.readTTT()
+      const room = dbTTT[userData.t3RoomID]
+      
+      if(room){
+        for(let p of room.player){
+          let pData = await localdb.readDB(p, false)
+          pData.isInT3 = false
+          pData.t3RoomID = 0
+          await localdb.writeDB(p, pData)
+        }
+        await sock.sendMessage(jid, {text: `User @${userId.split('@')[0]} resigned from TTT:${userData.t3RoomID}`, mentions: room.player})
+      }
+
+      delete dbTTT[userData.t3RoomID]
+      await ttt.writeTTT(dbTTT)
+      return 
+    }else if(moveMatch && userData && userData.isInT3){
       const position = parseInt(rawText) - 1
       const dbTTT = await ttt.readTTT()
       const room = dbTTT[userData.t3RoomID]

@@ -1,6 +1,6 @@
 
 >> ```Myuti WhatsApp Bot```
-> v0.2.0
+> v0.2.5
 
 >> Commands
 > .about
