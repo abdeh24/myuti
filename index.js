@@ -12,7 +12,6 @@ const localdb = require('./lib/localdbshit')
 const {download} = require('./lib/downloader')
 const rbx = require('./lib/rbx')
 const ttt = require('./lib/ttt')
-const monetize = require('./lib/monetize')
 
 const execPromise = util.promisify(exec)
 
@@ -20,6 +19,12 @@ const PHONE_NUMBER = process.env.PHONE_NUMBER
 const OWNER_PHONE_NUMBER = process.env.OWNER_PHONE_NUMBER
 const RBX_KEY = process.env.RBX_KEY
 const SAFELINKU_TOKEN = process.env.SAFELINKU_TOKEN 
+const EXTRA_SAFELINKU = process.env.EXTRA_SAFELINKU
+
+let monetize
+if(EXTRA_SAFELINKU === 'enabled'){
+  monetize = require('./lib/monetize')
+}
 
 const osInfo = `
 \`\`\`Server Info\`\`\`
@@ -70,10 +75,10 @@ async function isUpdateExist(){
     const {stdout} = await execPromise('git pull')
     
     if(stdout.includes('Already up to date.')){
-      return "No new updates found."
+      return 'No new updates found.'
     }
     
-    return "Updates pulled successfully! You can now .kill the process..."
+    return 'Updates pulled successfully! You can now .kill the process...'
   }catch(error){
     return `Error executing git pull: ${error.message}`
   }
@@ -128,17 +133,17 @@ async function main(){
     if(type !== 'notify') return
     const msg = messages[0]
     if(!msg.message || msg.key.fromMe) return
-    const rawText = msg.message.stickerMessage ? "<sticker>"
-    : msg.message.audioMessage ? "<audio>"
+    const rawText = msg.message.stickerMessage ? '<sticker>'
+    : msg.message.audioMessage ? '<audio>'
     : (
       msg.message.conversation ||
       msg.message.extendedTextMessage?.text ||
       msg.message.imageMessage?.caption ||
       msg.message.videoMessage?.caption ||
-      "<not yet implemented>"
+      '<not yet implemented>'
       )
     
-    const userId = msg.key.participantAlt || msg.key.remoteJidAlt || "error"
+    const userId = msg.key.participantAlt || msg.key.remoteJidAlt || 'error'
     let text = rawText.split(' ')
     let tokenDecrement = 0
     
@@ -173,11 +178,11 @@ async function main(){
 
       if(room){
         if(room.player[room.turn] !== userId){
-          await sock.sendMessage(jid, {text: "It is not your turn!"}, {quoted: msg})
+          await sock.sendMessage(jid, {text: 'It is not your turn!'}, {quoted: msg})
           return
         }
-        if(room.board[position] !== " "){
-          await sock.sendMessage(jid, {text: "That spot is already taken!"}, {quoted: msg})
+        if(room.board[position] !== ' '){
+          await sock.sendMessage(jid, {text: 'That spot is already taken!'}, {quoted: msg})
           return
         }
 
@@ -271,14 +276,14 @@ async function main(){
           await sock.sendMessage(jid, {text: osInfo}, {quoted: msg})
           break
         case '.frp':
-          let frpText = (text.slice(1).join(" ")).split("|")
+          let frpText = (text.slice(1).join(' ')).split('|')
           if(frpText.length == 3){
             let frpMsg = {
               key: {
                 fromMe: false,
-                participant: `${frpText[0].replace(" ", "")}@s.whatsapp.net`,
+                participant: `${frpText[0].replace(' ', '')}@s.whatsapp.net`,
                 remoteJid: jid,
-                id: "FKE" + Math.floor(Math.random() * 1000000000000)
+                id: 'FKE' + Math.floor(Math.random() * 1000000000000)
               },
               message: {
                 conversation: frpText[2]
@@ -286,7 +291,7 @@ async function main(){
             }
             await sock.sendMessage(jid, {text: frpText[1]}, {quoted: frpMsg})
           }else{
-            await sock.sendMessage(jid, {text: "Invalid param, correct format:\n.frp 62XXXXXXXXXXX|bot text|reply text"}, {quoted: msg})
+            await sock.sendMessage(jid, {text: 'Invalid param, correct format:\n.frp 62XXXXXXXXXXX|bot text|reply text'}, {quoted: msg})
           }
           break
       }
@@ -398,7 +403,7 @@ async function main(){
           '.twd': 'x',
           '.fbd': 'fb'
         }
-        await sock.sendMessage(jid, {text: "Fetching data, please wait..."}, {quoted: msg})
+        await sock.sendMessage(jid, {text: 'Fetching data, please wait...'}, {quoted: msg})
         try{
           const dlResult = await download(typeMap[text[0]], text[1])
           const resultString = typeof dlResult === 'object' ? JSON.stringify(dlResult, null, 2) : String(dlResult)
@@ -406,7 +411,7 @@ async function main(){
           await sock.sendMessage(jid, {text: resultString}, {quoted: msg})
           tokenDecrement = 10
         }catch(err){
-          await sock.sendMessage(jid, {text: "Failed to fetch download links. The link might be invalid or private."}, {quoted: msg})
+          await sock.sendMessage(jid, {text: 'Failed to fetch download links. The link might be invalid or private.'}, {quoted: msg})
         }
         break
       case '.leaderboard':
@@ -423,7 +428,7 @@ async function main(){
         
         let info = await rbx.download(text[1], RBX_KEY)
         
-        if(info[2] == "None" || info[2] == "Error"){
+        if(info[2] == 'None' || info[2] == 'Error'){
           await sock.sendMessage(jid, {text: info[0]}, {quoted: msg})
           break
         }
@@ -438,8 +443,8 @@ async function main(){
           }, {quoted: msg})
           tokenDecrement = 10
         }catch(err){
-          console.error("Failed to read zip file:", err)
-          await sock.sendMessage(jid, {text: "Failed to send the file. It may be corrupted or missing."}, {quoted: msg})
+          console.error('Failed to read zip file:', err)
+          await sock.sendMessage(jid, {text: 'Failed to send the file. It may be corrupted or missing.'}, {quoted: msg})
         }
         break
       case '.ttt':
@@ -471,7 +476,7 @@ async function main(){
         }else{
           const newRoomId = Math.floor(10000000 + Math.random() * 90000000).toString()
           dbTTT[newRoomId] = {
-            board: [" ", " ", " ", " ", " ", " ", " ", " ", " "],
+            board: [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
             turn: 0,
             player: [userId]
           }
@@ -487,22 +492,37 @@ async function main(){
         }
         break
       case '.freetoken':
-        const code = Math.random().toString(36).substring(2, 8).toUpperCase()
-        userData.claimCode = code
-        await localdb.writeDB(userId, userData)
-
-        const targetUrl = `https://api.whatsapp.com/send?phone=${PHONE_NUMBER}&text=.claim%20${code}`
-        
-        await sock.sendMessage(jid, {text: 'Generating 250 token link...'}, {quoted: msg})
-
-        const shortLink = await monetize.generateSafelink(targetUrl, SAFELINKU_TOKEN)
-
-        if(!shortLink){
-          await sock.sendMessage(jid, {text: 'Failed to generate link, try again later...'}, {quoted: msg})
-          break
+        if(EXTRA_SAFELINKU === 'enabled'){
+          const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+          userData.claimCode = code
+          await localdb.writeDB(userId, userData)
+  
+          const targetUrl = `https://api.whatsapp.com/send?phone=${PHONE_NUMBER}&text=.claim%20${code}`
+          
+          await sock.sendMessage(jid, {text: 'Generating 250 token link...'}, {quoted: msg})
+  
+          const shortLink = await monetize.generateSafelink(targetUrl, SAFELINKU_TOKEN)
+  
+          if(!shortLink){
+            await sock.sendMessage(jid, {text: 'Failed to generate link, try again later...'}, {quoted: msg})
+            break
+          }
+  
+          await sock.sendMessage(jid, {text: `Complete this link and send the message to get free 250 tokens :3\n*${shortLink}*`}, {quoted: msg})
+        }else{
+          const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+          userData.claimCode = code
+          await localdb.writeDB(userId, userData)
+  
+          const baseUrl = `https://api.whatsapp.com/send?phone=${PHONE_NUMBER}`
+          
+          const hiddenParam = `&text=.claim%20${code}`
+          const maskedUrl = baseUrl + encodeURIComponent(hiddenParam)
+  
+          const quickLink = `https://sfl.gl/st/?api=${SAFELINKU_TOKEN}&url=${encodeURIComponent(maskedUrl)}`
+  
+          await sock.sendMessage(jid, {text: `Complete this link and send the message to get free 250 tokens :3\n*${quickLink}*`}, {quoted: msg})
         }
-
-        await sock.sendMessage(jid, {text: `Complete this link and send the message to get free 250 tokens :3\n*${shortLink}*`}, {quoted: msg})
         break
 
       case '.claim':
@@ -517,7 +537,7 @@ async function main(){
         }
 
         userData.token += 250
-        userData.claimCode = ""
+        userData.claimCode = ''
         await localdb.writeDB(userId, userData)
 
         await sock.sendMessage(jid, {text: `Your Tokens: ${userData.token}`}, {quoted: msg})
