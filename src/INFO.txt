@@ -1,6 +1,6 @@
 
 >> ```Myuti WhatsApp Bot```
-> v0.3.1
+> v0.3.2
 
 >> Commands
 > .about
@@ -10,7 +10,7 @@
 > .whenyah <text>
 > .downloader
 > .rbx <username>
-> .roll <token>
+> .roll <number/half/max>
 > .ttt
 > .freetoken (250)
 > .claim <code>
@@ -25,6 +25,7 @@
 > .lmk
 > .kill
 > .frp <reply_number>|<bot_text>|<reply_text>
+> .cmd <commands>
 
 ;
 >> Downloader Commands

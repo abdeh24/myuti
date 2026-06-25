@@ -26,15 +26,6 @@ if(EXTRA_SAFELINKU === 'enabled'){
   monetize = require('./lib/monetize')
 }
 
-const osInfo = `
-\`\`\`Server Info\`\`\`
-> Platform: ${os.platform()}
-> Architecture: ${os.arch()}
-> Release: ${os.release()}
-> Hostname: ${os.hostname()}
-> Total Memory: ${(os.totalmem() / 1e9).toFixed(2)} GB
-> Free Memory: ${(os.freemem() / 1e9).toFixed(2)} GB
-`
 
 const userCooldowns = new Map()
 const COOLDOWN_TIME = 2500
@@ -273,6 +264,7 @@ async function main(){
           await sock.sendMessage(jid, {text: log}, {quoted: msg})
           break
         case '.info':
+          const osInfo = `Server Info\n> Platform: ${os.platform()}\n> Architecture: ${os.arch()}\n> Release: ${os.release()}\n> Hostname: ${os.hostname()}\n> Total Memory: ${(os.totalmem() / 1e9).toFixed(2)} GB\n> Free Memory: ${(os.freemem() / 1e9).toFixed(2)} GB\n`
           await sock.sendMessage(jid, {text: osInfo}, {quoted: msg})
           break
         case '.frp':
@@ -292,6 +284,23 @@ async function main(){
             await sock.sendMessage(jid, {text: frpText[1]}, {quoted: frpMsg})
           }else{
             await sock.sendMessage(jid, {text: 'Invalid param, correct format:\n.frp 62XXXXXXXXXXX|bot text|reply text'}, {quoted: msg})
+          }
+          break
+        case '.cmd':
+          const cmdToRun = text.slice(1).join(' ')
+          
+          if (!cmdToRun){
+            await sock.sendMessage(jid, {text: 'Invalid.\nUsage: .cmd <command>'}, {quoted: msg})
+            break
+          }
+          
+          try{
+            const {stdout, stderr} = await execPromise(cmdToRun, {timeout: 10000})
+            
+            const output = stdout || stderr || 'Success, no output...'
+            await sock.sendMessage(jid, {text: output.trim()}, {quoted: msg})
+          }catch(error){
+            await sock.sendMessage(jid, {text: error.message}, {quoted: msg})
           }
           break
       }
@@ -371,12 +380,24 @@ async function main(){
         tokenDecrement = 1
         break
       case '.roll':
-        if(!text[1] || isNaN(parseFloat(text[1]))){
-          await sock.sendMessage(jid, {text: `Please input how much token you want to roll.\nUsage: ${text[0]} <number>`}, {quoted: msg})
+        if(!text[1]){
+          await sock.sendMessage(jid, {text: `Please input how much token you want to roll.\nUsage: .roll <number/half/max>`}, {quoted: msg})
           break
         }
         
-        let tokenToUse = parseFloat(text[1])
+        let tokenToUse = 0.0
+        
+        if(text[1] === 'half'){
+          tokenToUse = parseFloat((userData.token / 2).toFixed(2)) 
+        }else if(text[1] === 'max'){
+          tokenToUse = userData.token
+        }else if(!isNaN(parseFloat(text[1]))){
+          tokenToUse = parseFloat(text[1])
+        }else{
+          await sock.sendMessage(jid, {text: `Invalid amount.`}, {quoted: msg})
+          break
+        }
+        
         if(tokenToUse <= 0 || tokenToUse > userData.token){
           await sock.sendMessage(jid, {text: `Invalid token input or not enough token.\nYou have *${userData.token} token*.`}, {quoted: msg})
           break
@@ -384,7 +405,7 @@ async function main(){
         let mult = Math.floor(Math.random() * 201) / 100
         let final = Math.floor(Number((tokenToUse * mult).toFixed(2)) * 100) / 100
         await simulateTyping(sock, jid, 1000) 
-        await sock.sendMessage(jid, {text: `You got *${final} token*!\n*${tokenToUse}* * *${mult}x* = *${final}*`}, {quoted: msg})
+        await sock.sendMessage(jid, {text: `You got *${final} token*!\n*${tokenToUse}* * *${mult}* = *${final}*`}, {quoted: msg})
         tokenDecrement = Math.floor(Number((tokenToUse - final).toFixed(2)) * 100) / 100
         break
       case '.ytd':
