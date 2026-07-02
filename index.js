@@ -21,42 +21,36 @@ const RBX_KEY = process.env.RBX_KEY
 const SAFELINKU_TOKEN = process.env.SAFELINKU_TOKEN 
 const EXTRA_SAFELINKU = process.env.EXTRA_SAFELINKU
 
-let monetize
+// #region GLOBAL EMPTY VAR {
+let monetize = () => {}
+
+let days = 0
+let time = 0
+// #endregion }
+
 if(EXTRA_SAFELINKU === 'enabled'){
   monetize = require('./lib/monetize')
 }
 
-
 const userCooldowns = new Map()
 const COOLDOWN_TIME = 2500
 
-const cmdList =[
-  '.about',
-  '.menu',
-  '.sticker',
-  '.s',
-  '.whenyah',
-  'when',
-  '.admin',
-  '.afk',
-  '.me',
-  '.downloader',
-  '.ytd',
-  '.igd',
-  '.ttd',
-  '.fbd',
-  '.twd',
-  '.goon',
-  '.rbx',
-  '.support',
-  '.roll',
-  '.leaderboard',
-  '.ttt',
-  '.freetoken',
+const cmdList = [
+  '.menu', '.help', '.about', '.info', '.tools', '.downloader', '.games', 
+  '.leaderboard', '.other', '.support', '.admin', '.update', '.kill', 
+  '.frp', ',', '.ytd', '.fbd', '.igd', '.ttd', '.twd', '.inv', '.afk', 
+  '.ttt', '.fish', '.sell', '.buy', '.roll', '.roll%', '.s', '.toimg', 
+  '.rbx', '.me', '.whenyah', 'whenyah', '.when', 'when', '.freetoken', 
   '.claim'
-  ]
+]
 
-async function simulateTyping(sock, jid, duration = 1500) {
+async function checkToken(sock, jid, msg, tokenNeeded, userToken){
+  if(tokenNeeded <= userToken) return false
+  sock.sendMessage(jid, {text: `Not enough token for this command!\nNeed ${tokenNeeded} Tokens\nYour token: ${userToken}\nNeed token? Do .goon or .freetoken`}, {quoted: msg})
+  return true
+}
+
+async function simulateTyping(sock, jid, duration = 1500){
   await sock.sendPresenceUpdate('composing', jid)
   await new Promise(resolve => setTimeout(resolve, duration))
 }
@@ -81,11 +75,11 @@ async function main(){
   let menuText = ''
   try{
     menuText = fs.readFileSync('./src/INFO.txt', 'utf8')
-    menuText = menuText.split(';')
+    menuText = menuText.split(/====\r?\n/)
   }catch(err){
     console.error(err)
   }
-  
+  // #region BAILEYS SETUP {
   const {state, saveCreds} = await useMultiFileAuthState('./AUTH')
   const {version} = await fetchLatestBaileysVersion()
   console.log(`Baileys Version: ${version.join('.')}`)
@@ -120,6 +114,8 @@ async function main(){
       console.log(`Bot connected as ${PHONE_NUMBER}\n`)
     }
   })
+  // #endregion }
+  
   sock.ev.on('messages.upsert', async ({type, messages}) => {
     if(type !== 'notify') return
     const msg = messages[0]
@@ -139,16 +135,17 @@ async function main(){
     let tokenDecrement = 0
     
     if(!msg.key.fromMe){
-      console.log(`${userId} | ${msg.pushName}\n> ${rawText}\n=================`)
+      console.log(`~~~~~~~~~~~~\n${userId} | ${msg.pushName}\n> ${rawText}`)
     }
+    
     const jid = msg.key.remoteJid
     let userData = await localdb.readDB(userId, true)
-
+    
+    // #region TTT MOVE {
     const moveMatch = rawText.match(/^[1-9]$/)
     if(text[0] == '.resign' && userData && userData.isInT3){
       const dbTTT = await ttt.readTTT()
       const room = dbTTT[userData.t3RoomID]
-      
       if(room){
         for(let p of room.player){
           let pData = await localdb.readDB(p, false)
@@ -223,15 +220,16 @@ async function main(){
         return 
       }
     }
-
+    // #endregion }
+    
+    // #region CHECK AFK {
     if(userData){
       if(userData.isAfk == true){
         let msNow = new Date().getTime()
         let msResult = msNow - userData.afkTime
         
-        let days = Math.floor(msResult / (1000 * 60 * 60 * 24))
-        let time = new Date(msResult).toISOString().slice(11, 19)
-        
+        days = Math.floor(msResult / (1000 * 60 * 60 * 24))
+        time = new Date(msResult).toISOString().slice(11, 19)
         let timeString = days > 0 ? `${days} days, ${time}` : time
         
         let afkReason = userData.afkReason
@@ -251,21 +249,19 @@ async function main(){
         await localdb.writeDB(userId, userData)
       }
     }
+    // #endregion }
     
+    // #region TEXT FROM OWNER {
     if(userId == `${OWNER_PHONE_NUMBER}@s.whatsapp.net`){
       switch(text[0]){
-        case '.kill':
-          await sock.sendMessage(jid, {text: 'Goodbye...'}, {quoted: msg})
-          process.exit(0)
-          break
-        case '.lmk':
+        case '.update':
           let log = await isUpdateExist()
           console.log(log)
           await sock.sendMessage(jid, {text: log}, {quoted: msg})
           break
-        case '.info':
-          const osInfo = `Server Info\n> Platform: ${os.platform()}\n> Architecture: ${os.arch()}\n> Release: ${os.release()}\n> Hostname: ${os.hostname()}\n> Total Memory: ${(os.totalmem() / 1e9).toFixed(2)} GB\n> Free Memory: ${(os.freemem() / 1e9).toFixed(2)} GB\n`
-          await sock.sendMessage(jid, {text: osInfo}, {quoted: msg})
+        case '.kill':
+          await sock.sendMessage(jid, {text: 'Goodbye...'}, {quoted: msg})
+          process.exit(0)
           break
         case '.frp':
           let frpText = (text.slice(1).join(' ')).split('|')
@@ -286,11 +282,11 @@ async function main(){
             await sock.sendMessage(jid, {text: 'Invalid param, correct format:\n.frp 62XXXXXXXXXXX|bot text|reply text'}, {quoted: msg})
           }
           break
-        case '.cmd':
+        case ',':
           const cmdToRun = text.slice(1).join(' ')
           
-          if (!cmdToRun){
-            await sock.sendMessage(jid, {text: 'Invalid.\nUsage: .cmd <command>'}, {quoted: msg})
+          if(cmdToRun == ''){
+            await sock.sendMessage(jid, {text: 'Invalid.\nUsage: , echo'}, {quoted: msg})
             break
           }
           
@@ -300,52 +296,116 @@ async function main(){
             const output = stdout || stderr || 'Success, no output...'
             await sock.sendMessage(jid, {text: output.trim()}, {quoted: msg})
           }catch(error){
-            await sock.sendMessage(jid, {text: error.message}, {quoted: msg})
+            const output = error.stdout || error.stderr || error.message;
+            await sock.sendMessage(jid, {text: output.trim()}, {quoted: msg})
           }
           break
       }
     }
+    // #endregion }
     
+    // #region CHECK USER MESSAGES {
     if(!cmdList.includes(text[0])) return
     const currentTime = Date.now()
-    if (userCooldowns.has(userId)){
+    if(userCooldowns.has(userId)){
       const expirationTime = userCooldowns.get(userId) + COOLDOWN_TIME
       if(currentTime < expirationTime){
         return
       }
     }
+    // #endregion }
+    
     userCooldowns.set(userId, currentTime)
-
+    
     userData = await localdb.readDB(userId, false)
     
+    // #region TEXT FROM USER {
     switch(text[0]){
+      // #region MAIN COMMANDS {
+      case '.menu':
+      case '.help':
+        await simulateTyping(sock, jid, 1000)
+        await sock.sendMessage(jid, {text: menuText[0]}, {quoted: msg})
+        break
       case '.about':
         await simulateTyping(sock, jid, 1000)
         await sock.sendMessage(jid, {text: menuText[3]}, {quoted: msg})
         break
-      case '.menu':
+      case '.info':
+        let rawUptime = Math.floor(process.uptime())
+        
+        days = Math.floor(rawUptime / (60 * 60 * 24))
+        time = new Date(rawUptime * 1000).toISOString().slice(11, 19)
+        let uptime = days > 0 ? `${days} days, ${time}` : time
+        
+        const osInfo = `\`\`\`SERVER INFO\`\`\`\n> Platform: ${os.platform()}\n> Architecture: ${os.arch()}\n> Release: ${os.release()}\n> Hostname: ${os.hostname()}\n> Total Memory: ${(os.totalmem() / 1e9).toFixed(2)} GB\n> Free Memory: ${(os.freemem() / 1e9).toFixed(2)} GB\n> Bot Uptime: ${uptime}`
+        await sock.sendMessage(jid, {text: osInfo}, {quoted: msg})
+        break
+      case '.tools':
         await simulateTyping(sock, jid, 1000)
-        await sock.sendMessage(jid, {text: menuText[0]}, {quoted: msg})
+        await sock.sendMessage(jid, {text: menuText[6]}, {quoted: msg})
         break
-      case '.goon' :
-        await sock.sendMessage(jid, {text: 'lets goon...!'}, {quoted: msg})
-        tokenDecrement = -5
+      case '.downloader':
+        await simulateTyping(sock, jid, 1000)
+        await sock.sendMessage(jid, {text: menuText[2]}, {quoted: msg})
         break
-      case '.sticker':
-      case '.s':
-        if(!msg.message.imageMessage && !msg.message.videoMessage){
-          await sock.sendMessage(jid, {text: 'No image found, please attach image'}, {quoted: msg})
-        }else if(msg.message.imageMessage){
-          sticker.fromImage(sock, jid, msg, downloadMediaMessage)
-        }else if(msg.message.videoMessage){
-          sticker.fromVideo(sock, jid, msg, downloadMediaMessage)
+      case '.games':
+        await simulateTyping(sock, jid, 1000)
+        await sock.sendMessage(jid, {text: menuText[5]}, {quoted: msg})
+        break
+      case '.leaderboard':
+        await simulateTyping(sock, jid, 2000)
+        let leaderboardText = await localdb.updateLeaderboards(userData.username)
+        await sock.sendMessage(jid, {text: leaderboardText}, {quoted: msg})
+        break
+      case '.other':
+        await simulateTyping(sock, jid, 1000)
+        await sock.sendMessage(jid, {text: menuText[7]}, {quoted: msg})
+        break
+      case '.support':
+        await simulateTyping(sock, jid, 1000)
+        await sock.sendMessage(jid, {text: menuText[4]}, {quoted: msg})
+        break
+      case '.admin':
+        await simulateTyping(sock, jid, 1000)
+        await sock.sendMessage(jid, {text: menuText[1]}, {quoted: msg})
+        break
+      // #endregion }
+      
+      // #region DOWNLOADER COMMANDS {
+      case '.ytd':
+      case '.fbd':
+      case '.igd':
+      case '.ttd':
+      case '.twd':
+        if(await checkToken(sock, jid, msg, 10, userData.token) == true) break
+        if(!text[1]){
+          await sock.sendMessage(jid, {text: `Please provide a link. Usage: ${text[0]} <link>`}, {quoted: msg})
+          break
         }
-        tokenDecrement = 5
+        const typeMap = {
+          '.ytd': 'yt',
+          '.fbd': 'fb',
+          '.igd': 'ig',
+          '.ttd': 'tt',
+          '.twd': 'x'
+        }
+        await sock.sendMessage(jid, {text: 'Fetching data, please wait...'}, {quoted: msg})
+        try{
+          const dlResult = await download(typeMap[text[0]], text[1])
+          const resultString = typeof dlResult === 'object' ? JSON.stringify(dlResult, null, 2) : String(dlResult)
+          await simulateTyping(sock, jid, 2000)
+          await sock.sendMessage(jid, {text: resultString}, {quoted: msg})
+          tokenDecrement = 10
+        }catch(err){
+          await sock.sendMessage(jid, {text: 'Failed to fetch download links. The link might be invalid or private.'}, {quoted: msg})
+        }
         break
-      case '.whenyah':
-      case 'when':
-        await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
-        tokenDecrement = 1
+      // #endregion }
+      
+      // #region GAMES COMMANDS {
+      case '.inv':
+        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...', {quoted: msg})
         break
       case '.afk':
         let fullText = text.slice(1).join(' ')
@@ -359,117 +419,9 @@ async function main(){
         userData.isAfk = true
         userData.afkTime = new Date().getTime()
         userData.afkReason = fullText
-        tokenDecrement = 1
-        break
-      case '.me':
-        let meNum = `@${userId.replace('@s.whatsapp.net', '')}`
-        let meMsg = `User: ${meNum}\nToken: *${userData.token}*\nLastAfkReason: *${userData.afkReason}*`
-        await sock.sendMessage(jid, {text: meMsg, mentions: [userId]}, {quoted: msg})
-        break
-      case '.admin':
-        await simulateTyping(sock, jid, 1000)
-        await sock.sendMessage(jid, {text: menuText[1]}, {quoted: msg})
-        break
-      case '.support':
-        await simulateTyping(sock, jid, 1000)
-        await sock.sendMessage(jid, {text: menuText[4]}, {quoted: msg})
-        break
-      case '.downloader':
-        await simulateTyping(sock, jid, 1000)
-        await sock.sendMessage(jid, {text: menuText[2]}, {quoted: msg})
-        tokenDecrement = 1
-        break
-      case '.roll':
-        if(!text[1]){
-          await sock.sendMessage(jid, {text: `Please input how much token you want to roll.\nUsage: .roll <number/half/max>`}, {quoted: msg})
-          break
-        }
-        
-        let tokenToUse = 0.0
-        
-        if(text[1] === 'half'){
-          tokenToUse = parseFloat((userData.token / 2).toFixed(2)) 
-        }else if(text[1] === 'max'){
-          tokenToUse = userData.token
-        }else if(!isNaN(parseFloat(text[1]))){
-          tokenToUse = parseFloat(text[1])
-        }else{
-          await sock.sendMessage(jid, {text: `Invalid amount.`}, {quoted: msg})
-          break
-        }
-        
-        if(tokenToUse <= 0 || tokenToUse > userData.token){
-          await sock.sendMessage(jid, {text: `Invalid token input or not enough token.\nYou have *${userData.token} token*.`}, {quoted: msg})
-          break
-        }
-        let mult = Math.floor(Math.random() * 201) / 100
-        let final = Math.floor(Number((tokenToUse * mult).toFixed(2)) * 100) / 100
-        await simulateTyping(sock, jid, 1000) 
-        await sock.sendMessage(jid, {text: `You got *${final} token*!\n*${tokenToUse}* * *${mult}* = *${final}*`}, {quoted: msg})
-        tokenDecrement = Math.floor(Number((tokenToUse - final).toFixed(2)) * 100) / 100
-        break
-      case '.ytd':
-      case '.igd':
-      case '.ttd':
-      case '.twd':
-      case '.fbd':
-        if(!text[1]){
-          await sock.sendMessage(jid, {text: `Please provide a link. Usage: ${text[0]} <link>`}, {quoted: msg})
-          break
-        }
-        const typeMap = {
-          '.ytd': 'yt',
-          '.igd': 'ig',
-          '.ttd': 'tt',
-          '.twd': 'x',
-          '.fbd': 'fb'
-        }
-        await sock.sendMessage(jid, {text: 'Fetching data, please wait...'}, {quoted: msg})
-        try{
-          const dlResult = await download(typeMap[text[0]], text[1])
-          const resultString = typeof dlResult === 'object' ? JSON.stringify(dlResult, null, 2) : String(dlResult)
-          await simulateTyping(sock, jid, 2000)
-          await sock.sendMessage(jid, {text: resultString}, {quoted: msg})
-          tokenDecrement = 10
-        }catch(err){
-          await sock.sendMessage(jid, {text: 'Failed to fetch download links. The link might be invalid or private.'}, {quoted: msg})
-        }
-        break
-      case '.leaderboard':
-        await simulateTyping(sock, jid, 2000)
-        let leaderboardText = await localdb.updateLeaderboards(userData.username)
-        await sock.sendMessage(jid, {text: leaderboardText}, {quoted: msg})
-        break
-      case '.rbx':
-        if(!text[1]){
-          await sock.sendMessage(jid, {text: `Please provide Roblox Username. Usage: .rbx Abde_4803`}, {quoted: msg})
-          break
-        }
-        await sock.sendMessage(jid, {text: 'Please wait...'}, {quoted: msg})
-        
-        let info = await rbx.download(text[1], RBX_KEY)
-        
-        if(info[2] == 'None' || info[2] == 'Error'){
-          await sock.sendMessage(jid, {text: info[0]}, {quoted: msg})
-          break
-        }
-        
-        await simulateTyping(sock, jid, 2000)
-        try{
-          await sock.sendMessage(jid, {
-            document: fs.readFileSync(`src/tmp/${info[1]}`),
-            mimetype: 'application/zip',
-            fileName: info[1],
-            caption: info[0]
-          }, {quoted: msg})
-          tokenDecrement = 10
-        }catch(err){
-          console.error('Failed to read zip file:', err)
-          await sock.sendMessage(jid, {text: 'Failed to send the file. It may be corrupted or missing.'}, {quoted: msg})
-        }
         break
       case '.ttt':
-        if (userData.isInT3) {
+        if(userData.isInT3){
           await sock.sendMessage(jid, {text: `You are already in a match! Room ID: ${userData.t3RoomID}`}, {quoted: msg})
           break
         }
@@ -512,6 +464,124 @@ async function main(){
           await sock.sendMessage(jid, {text: boardText, mentions: [userId]})
         }
         break
+      case '.fish':
+        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...', {quoted: msg})
+        break
+      case '.sell':
+      case '.buy':
+        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...', {quoted: msg})
+        break
+      case '.roll':
+        if(!text[1]){
+          await sock.sendMessage(jid, {text: `Please input how much token you want to roll.\nUsage: .roll <number/half/max>`}, {quoted: msg})
+          break
+        }
+        
+        let tokenToUse = 0.0
+        
+        if(text[1] === 'half'){
+          tokenToUse = parseFloat((userData.token / 2).toFixed(2)) 
+        }else if(text[1] === 'max'){
+          tokenToUse = userData.token
+        }else if(!isNaN(parseFloat(text[1]))){
+          tokenToUse = parseFloat(text[1])
+        }else{
+          await sock.sendMessage(jid, {text: `Invalid amount.`}, {quoted: msg})
+          break
+        }
+        
+        if(tokenToUse <= 0 || tokenToUse > userData.token){
+          await sock.sendMessage(jid, {text: `Invalid token input or not enough token.\nYou have *${userData.token} token*.`}, {quoted: msg})
+          break
+        }
+        
+        const rand = Math.random() * 100;
+        const tiers = [
+        {limit: 10.0, calc: () => 0},
+        {limit: 35.0, calc: () => (Math.floor(Math.random() * 99) + 1) / 100},
+        {limit: 62.5, calc: () => 1},
+        {limit: 82.5, calc: () => (Math.floor(Math.random() * 99) + 101) / 100},
+        {limit: 92.5, calc: () => 2},
+        {limit: 97.5, calc: () => (Math.floor(Math.random() * 99) + 201) / 100}
+        ]
+        const matched = tiers.find(t => rand < t.limit)
+        
+        let mult = matched ? matched.calc() : 3.00
+        let final = Math.floor(Number((tokenToUse * mult).toFixed(2)) * 100) / 100
+        await simulateTyping(sock, jid, 1000) 
+        await sock.sendMessage(jid, {text: `You got *${final} token*!\n*${tokenToUse}* * *${mult}* = *${final}*`}, {quoted: msg})
+        tokenDecrement = Math.floor(Number((tokenToUse - final).toFixed(2)) * 100) / 100
+        break
+      case '.roll%':
+        await sock.sendMessage(jid, {text: 'Roll Probability\n0 = 10%\n<1 = 25%\n1 = 27.5%\n<2 = 20%\n2 = 10%\n<3 = 5%\n3 = 2.5%'})
+        break
+      // #endregion }
+      
+      // #region TOOLS COMMANDS {
+      case '.s':
+        if(await checkToken(sock, jid, msg, 5, userData.token) == true) break
+        if(!msg.message.imageMessage && !msg.message.videoMessage){
+          await sock.sendMessage(jid, {text: 'No media found, please attach media~'}, {quoted: msg})
+        }else if(msg.message.imageMessage){
+          await sticker.fromImage(sock, jid, msg, downloadMediaMessage)
+        }else if(msg.message.videoMessage){
+          await sticker.fromVideo(sock, jid, msg, downloadMediaMessage)
+        }
+        tokenDecrement = 5
+        break
+      case '.toimg':
+        if(await checkToken(sock, jid, msg, 2.5, userData.token) == true) break
+        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...', {quoted: msg})
+        tokenDecrement = 2.5
+        break
+      case '.rbx':
+        if(await checkToken(sock, jid, msg, 10, userData.token) == true) break
+        if(!text[1]){
+          await sock.sendMessage(jid, {text: `Please provide Roblox Username. Usage: .rbx Abde_4803`}, {quoted: msg})
+          break
+        }
+        await sock.sendMessage(jid, {text: 'Please wait...'}, {quoted: msg})
+        
+        let info = await rbx.download(text[1], RBX_KEY)
+        
+        if(info[2] == 'None' || info[2] == 'Error'){
+          await sock.sendMessage(jid, {text: info[0]}, {quoted: msg})
+          break
+        }
+        
+        await simulateTyping(sock, jid, 2000)
+        try{
+          await sock.sendMessage(jid, {
+            document: fs.readFileSync(`src/tmp/${info[1]}`),
+            mimetype: 'application/zip',
+            fileName: info[1],
+            caption: info[0]
+          }, {quoted: msg})
+          tokenDecrement = 10
+        }catch(err){
+          console.error('Failed to read zip file:', err)
+          await sock.sendMessage(jid, {text: 'Failed to send the file. It may be corrupted or missing.'}, {quoted: msg})
+        }
+        break
+      // #endregion }
+      
+      // #region OTHER COMMANDS {
+      case '.me':
+        let meNum = `@${userId.replace('@s.whatsapp.net', '')}`
+        
+        days = Math.floor(userData.longestAfkTime / (1000 * 60 * 60 * 24))
+        time = new Date(userData.longestAfkTime).toISOString().slice(11, 19)
+        let timeString = days > 0 ? `${days} days, ${time}` : time
+        
+        let meMsg = `User: ${meNum}\n> Token: *${userData.token}*\n> Longest Afk: *${timeString}*\n> Last Afk: *${userData.afkReason}*\n> TTT Win: *${userData.tttWin}*`
+        await sock.sendMessage(jid, {text: meMsg, mentions: [userId]}, {quoted: msg})
+        break
+      case '.whenyah':
+      case 'whenyah':
+      case '.when':
+      case 'when':
+        await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
+        break
       case '.freetoken':
         if(EXTRA_SAFELINKU === 'enabled'){
           const code = Math.random().toString(36).substring(2, 8).toUpperCase()
@@ -542,10 +612,9 @@ async function main(){
   
           const quickLink = `https://sfl.gl/st/?api=${SAFELINKU_TOKEN}&url=${encodeURIComponent(maskedUrl)}`
   
-          await sock.sendMessage(jid, {text: `Complete this link and send the message to get free 250 tokens :3\n*${quickLink}*`}, {quoted: msg})
+          await sock.sendMessage(jid, {text: `Complete this link and send the code to get free 250 tokens :3\n*${quickLink}*`}, {quoted: msg})
         }
         break
-
       case '.claim':
         if(!text[1]){
           await sock.sendMessage(jid, {text: `Usage: .claim <code>`}, {quoted: msg})
@@ -561,9 +630,17 @@ async function main(){
         userData.claimCode = ''
         await localdb.writeDB(userId, userData)
 
-        await sock.sendMessage(jid, {text: `Your Tokens: ${userData.token}`}, {quoted: msg})
+        await sock.sendMessage(jid, {text: `Thank you~\nYour Tokens: ${userData.token}`}, {quoted: msg})
         break
+      case '.goon':
+        await sock.sendMessage(jid, {text: 'lets goon...!\n+5 tokens.'}, {quoted: msg})
+        tokenDecrement = -5
+        break
+      // #endregion }
+
     }
+    // #endregion }
+    
     userData.username = msg.pushName
     userData.token = Number((userData.token - tokenDecrement).toFixed(2))
     await localdb.writeDB(userId, userData)

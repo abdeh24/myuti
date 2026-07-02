@@ -1,69 +1,81 @@
+```MYUTI
+WhatsApp Bot```
 
->> ```Myuti WhatsApp Bot```
-> v0.3.2
-
->> Commands
+- Commands
+> .menu / .help
 > .about
-> .menu
-> .afk <text>
-> .sticker / .s <image/video/gif>
-> .whenyah <text>
+> .info
+> .tools
 > .downloader
-> .rbx <username>
-> .roll <number/half/max>
-> .ttt
-> .freetoken (250)
-> .claim <code>
-> .me
+> .games
 > .leaderboard
+> .other
 > .support
 > .admin
-
-;
->> Admin Commands
-> .info
-> .lmk
+====
+```ADMIN```
+> .update
 > .kill
 > .frp <reply_number>|<bot_text>|<reply_text>
-> .cmd <commands>
+> , _(Spawn subprocess. Usage: , echo)_
+====
+```DOWNLOADER```
+> _btch-downloader_
 
-;
->> Downloader Commands
-*!! Make sure the url is not privated post !!*
-_btch-downloader_
-> .ytd <url> | youtube
-> .fbd <url> | facebook
-> .igd <url> | instagram
-> .ttd <url> | tiktok
-> .twd <url> | twitter/x
+_please make sure, target is not private post~_
 
-;
->> About
+> .ytd <url> _(youtube)_
+> .fbd <url> _(facebook)_
+> .igd <url> _(instagram)_
+> .ttd <url> _(tiktok)_
+> .twd <url> _(twitter/x)_
+====
+```ABOUT```
 > Name: Myuti
+> Version: 0.3.5
 > Language: NodeJS
+> Birth: 13 May 2026
 > Dev: Abde
-> Site: abdf.qzz.io
+> Site: _abdf.qzz.io_
+====
+```SUPPORTS```
+- Donate
+> USDT TRC 20: TMoVko1QaJT2yFyoR1qDziayNAQVcx58Lv
+> Chat privately if you want to donate with other methods
 
-;
->> Support
-Donate?
+- Report Bugs or Feedbacks
+> _github.com/abdeh24/myuti/issues/new_
 
-USDT: *TRC 20 Network*
-Address: TMoVko1QaJT2yFyoR1qDziayNAQVcx58Lv
+- Contact
+> _facebook.com/abde4a_
+====
+```GAMES```
+- Other
+> .inv
+> .afk <text>
+> .ttt
 
-or
+- Fishing
+> .fish
+> .sell <item> <amount>
+> .buy <list/item> <amount>
 
-link-hub.net/3602015/whsK4iQHGIEJ
+- Gamble
+> .roll <max/half/number>
+> .roll% _(see probability)_
+> -more coming soon-
+====
+```TOOLS```
+> .s <img/gif/vids> _(media to sticker)_
+> .toimg <reply sticker> _(sticker to img/gif)_
+> .rbx <username> _(download user model)_
+====
+```OTHER```
+> .me
+> .whenyah / whenyah / .when / when
+> .freetoken _(250 token)_
+> .claim <code>
+====
 
-Kindly open this Linkvertise and finish it :3
-It will help me a lot  ^^
-~Well not much as giving direct money to me~
 
-Report bug?
-Create new issue here
-github.com/abdeh24/myuti/issues/new
 
-Contact?
-Facebook: facebook.com/abde4a
-
-;
