@@ -405,7 +405,7 @@ async function main(){
       
       // #region GAMES COMMANDS {
       case '.inv':
-        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...', {quoted: msg})
+        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...'}, {quoted: msg})
         break
       case '.afk':
         let fullText = text.slice(1).join(' ')
@@ -465,11 +465,11 @@ async function main(){
         }
         break
       case '.fish':
-        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...', {quoted: msg})
+        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...'}, {quoted: msg})
         break
       case '.sell':
       case '.buy':
-        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...', {quoted: msg})
+        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...'}, {quoted: msg})
         break
       case '.roll':
         if(!text[1]){
@@ -531,7 +531,7 @@ async function main(){
         break
       case '.toimg':
         if(await checkToken(sock, jid, msg, 2.5, userData.token) == true) break
-        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...', {quoted: msg})
+        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...'}, {quoted: msg})
         tokenDecrement = 2.5
         break
       case '.rbx':
