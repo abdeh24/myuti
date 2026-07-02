@@ -75,6 +75,7 @@ _please make sure, target is not private post~_
 > .whenyah / whenyah / .when / when
 > .freetoken _(250 token)_
 > .claim <code>
+> .goon
 ====
 
 

@@ -41,7 +41,7 @@ const cmdList = [
   '.frp', ',', '.ytd', '.fbd', '.igd', '.ttd', '.twd', '.inv', '.afk', 
   '.ttt', '.fish', '.sell', '.buy', '.roll', '.roll%', '.s', '.toimg', 
   '.rbx', '.me', '.whenyah', 'whenyah', '.when', 'when', '.freetoken', 
-  '.claim'
+  '.claim', '.resign', '.goon'
 ]
 
 async function checkToken(sock, jid, msg, tokenNeeded, userToken){
