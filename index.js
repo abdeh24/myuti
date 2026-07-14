@@ -134,6 +134,8 @@ async function main(){
     const userId = msg.key.participantAlt || msg.key.remoteJidAlt || 'error'
     let text = rawText.split(' ')
     let tokenDecrement = 0
+    text[0] = text[0].toLowerCase()
+    
     
     if(!msg.key.fromMe){
       console.log(`~~~~~~~~~~~~\n${userId} | ${msg.pushName}\n> ${rawText}`)
@@ -475,7 +477,7 @@ async function main(){
         break
       case '.fish':
         let fishMsg = ''
-        let bait = userData.inv.Worm || userData.inv.StarWorm
+        let bait = userData.inv.Worm || userData.inv.StarWorm || userData.inv.TruffleWorm
         if(bait == undefined){
           fishMsg = 'You don\'t have any bait!\n> Go *.buy list*'
           await sock.sendMessage(jid, {text: fishMsg}, {quoted: msg})
@@ -483,7 +485,8 @@ async function main(){
         }
         
         let baitUsed = 'Worm'
-        if(bait == userData.inv.starworm) baitUsed = 'StarWorm'
+        if(bait == userData.inv.StarWorm) baitUsed = 'StarWorm'
+        if(bait == userData.inv.TruffleWorm) baitUsed = 'TruffleWorm'
         
         let fishInfo = fish.goFishing(baitUsed)
         
@@ -501,7 +504,7 @@ async function main(){
         let totalSellPrice = 0
         let sellMsg = 'You have nothing to sell!\n> See .inv'
         let sellList = {
-          'Worm': 1, 'StarWorm': 5,
+          'Worm': 1, 'StarWorm': 5, 'TruffleWorm': 66666, 'MToken': 1000,
           
           'Plastic': 0.5, 'Stick': 0.6,
           'OldBoot': 0.8, 'RustyCan': 0.7,
@@ -531,7 +534,12 @@ async function main(){
           'Coelacanth': 95,'MegamouthShark': 92,
           'Oarfish': 88,'ElectricEel': 78,
           'Arowana': 82,'GhostKoi': 98,
-          'WhaleShark': 90,'Hammerhead': 75
+          'WhaleShark': 90,'Hammerhead': 75,
+          
+          'DukeFishron': 66666.66,
+          'Emas74Kilogram': 66666.74,
+          'CurlyPanties': 66666.21,
+          'Pignon': 66666.01
         }
         
         if(Object.keys(userData.inv).length == 0){
@@ -539,11 +547,13 @@ async function main(){
           break
         }
         
+        let blacklistOnSellAll = ['Worm', 'StarWorm', 'TruffleWorm', 'MToken']
+        
         if(text[1] == 'all'){
           sellMsg = 'You sell your inventory...\n'
           let totalItem = 0
           for(let [key, value] of Object.entries(userData.inv)){
-            if(key != 'Worm' && key != 'StarWorm' && sellList[key] != undefined){
+            if(blacklistOnSellAll[key] == undefined && sellList[key] != undefined){
               let totalSell = sellList[key] * value
               totalSellPrice += totalSell
               delete userData.inv[key]
@@ -551,7 +561,7 @@ async function main(){
               totalItem += value
             }
           }
-          sellMsg += `You've sold *${totalItem}* items in your inventory!\n> You've been paid *${totalSellPrice} tokens!*`
+          sellMsg += `\nYou've sold *${totalItem}* items in your inventory!\n> You've been paid *${totalSellPrice} tokens!*`
           tokenDecrement = -totalSellPrice
         }else{
           if(userData.inv[text[1]] != undefined && sellList[text[1]] != undefined){
@@ -565,7 +575,7 @@ async function main(){
             tokenDecrement = -totalSellPrice
             sellMsg = `You've sold *${text[1]} x${sellAmount}* for *${totalSellPrice} tokens*.`
           }else{
-            sellMsg = 'Invalid! Usage:\n> .sell all\n .sell <item> <amount>\n .sell <item> all'
+            sellMsg = 'Invalid! Usage:\n> .sell all\n> .sell <item> <amount>\n> .sell <item> all'
           }
         }
         
@@ -576,6 +586,7 @@ async function main(){
         let itemList = {
           Worm: 1,
           StarWorm: 5,
+          TruffleWorm: 66666,
           MToken: 1000
         }
         let buyList = Object.entries(itemList)
