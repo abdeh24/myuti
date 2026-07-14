@@ -32,7 +32,7 @@ _please make sure, target is not private post~_
 ====
 ```ABOUT```
 > Name: Myuti
-> Version: 0.3.5
+> Version: 0.4.0
 > Language: NodeJS
 > Birth: 13 May 2026
 > Dev: Abde
@@ -73,6 +73,7 @@ _please make sure, target is not private post~_
 ```OTHER```
 > .me
 > .whenyah / whenyah / .when / when
+> .daily
 > .freetoken _(250 token)_
 > .claim <code>
 > .goon

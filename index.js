@@ -12,6 +12,7 @@ const localdb = require('./lib/localdbshit')
 const {download} = require('./lib/downloader')
 const rbx = require('./lib/rbx')
 const ttt = require('./lib/ttt')
+const fish = require('./lib/fish')
 
 const execPromise = util.promisify(exec)
 
@@ -37,16 +38,16 @@ const COOLDOWN_TIME = 2500
 
 const cmdList = [
   '.menu', '.help', '.about', '.info', '.tools', '.downloader', '.games', 
-  '.leaderboard', '.other', '.support', '.admin', '.update', '.kill', 
-  '.frp', ',', '.ytd', '.fbd', '.igd', '.ttd', '.twd', '.inv', '.afk', 
-  '.ttt', '.fish', '.sell', '.buy', '.roll', '.roll%', '.s', '.toimg', 
-  '.rbx', '.me', '.whenyah', 'whenyah', '.when', 'when', '.freetoken', 
-  '.claim', '.resign', '.goon'
+  '.leaderboard', '.other', '.support', '.admin', '.update', '.ytd', '.fbd',
+  '.igd', '.ttd', '.twd', '.inv', '.afk', '.ttt', '.fish',
+  '.sell', '.buy', '.roll', '.roll%', '.s', '.toimg', '.rbx',
+  '.me', '.whenyah', 'whenyah', '.when', 'when', '.freetoken', '.claim',
+  '.resign', '.goon', '.daily', '.fish', '.sell', '.buy'
 ]
 
 async function checkToken(sock, jid, msg, tokenNeeded, userToken){
   if(tokenNeeded <= userToken) return false
-  sock.sendMessage(jid, {text: `Not enough token for this command!\nNeed ${tokenNeeded} Tokens\nYour token: ${userToken}\nNeed token? Do .goon or .freetoken`}, {quoted: msg})
+  sock.sendMessage(jid, {text: `Not enough tokens for this command!\nNeed ${tokenNeeded} Tokens\nYour token: ${userToken}\nNeed token? Do .goon or .freetoken`}, {quoted: msg})
   return true
 }
 
@@ -88,7 +89,7 @@ async function main(){
     version,
     auth: state,
     logger: pino({level: 'silent'}),
-    printQRInTerminal: false,
+    printQRInTerminal: false
   })
 
   if(!sock.authState.creds.registered){
@@ -405,7 +406,15 @@ async function main(){
       
       // #region GAMES COMMANDS {
       case '.inv':
-        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...'}, {quoted: msg})
+        let invMsg = `*@${userId.replace('@s.whatsapp.net', '')} Inventory:*\n`
+        let invRes = ''
+        if(Object.keys(userData.inv).length > 0){
+          invRes = Object.entries(userData.inv)
+            .map(([item, amount]) => `> *${item}* x${amount}`)
+            .join('\n')
+        }
+        invMsg += invRes
+        await sock.sendMessage(jid, {text: invMsg, mentions: [userId]}, {quoted: msg})
         break
       case '.afk':
         let fullText = text.slice(1).join(' ')
@@ -465,15 +474,138 @@ async function main(){
         }
         break
       case '.fish':
-        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...'}, {quoted: msg})
+        let fishMsg = ''
+        let bait = userData.inv.Worm || userData.inv.StarWorm
+        if(bait == undefined){
+          fishMsg = 'You don\'t have any bait!\n> Go *.buy list*'
+          await sock.sendMessage(jid, {text: fishMsg}, {quoted: msg})
+          break
+        }
+        
+        let baitUsed = 'Worm'
+        if(bait == userData.inv.starworm) baitUsed = 'StarWorm'
+        
+        let fishInfo = fish.goFishing(baitUsed)
+        
+        fishMsg = `You got *${fishInfo[0]}*!\n> rarity: *${fishInfo[1]}*\n> -1 *${baitUsed}*`
+        
+        userData.inv[baitUsed] -= 1
+        if(userData.inv[baitUsed] == 0) delete userData.inv[baitUsed]
+        
+        if(userData.inv[fishInfo[0]] == undefined) userData.inv[fishInfo[0]] = 0
+        userData.inv[fishInfo[0]] += 1
+        
+        await sock.sendMessage(jid, {text: fishMsg}, {quoted: msg})
         break
       case '.sell':
+        let totalSellPrice = 0
+        let sellMsg = 'You have nothing to sell!\n> See .inv'
+        let sellList = {
+          'Worm': 1, 'StarWorm': 5,
+          
+          'Plastic': 0.5, 'Stick': 0.6,
+          'OldBoot': 0.8, 'RustyCan': 0.7,
+          'Seaweed': 0.5, 'TornNet': 0.9,
+          'Driftwood': 0.6, 'SoggyNewspaper': 0.5,
+          'Broken Glass': 0.7, 'LostKey': 1.0,
+        
+          'Minnow': 2, 'Carp': 4,
+          'Anchovy': 3, 'Sardine': 5,
+          'Herring': 6, 'Mackerel': 8,
+          'Perch': 7, 'Tilapia': 9,
+          'Bluegill': 10, 'Chub': 4,
+        
+          'Bass': 12, 'Catfish': 15,
+          'Cod': 18, 'Haddock': 11,
+          'Flounder': 14,'Pollock': 13,
+          'Crappie': 16,'Walleye': 20,
+          'Snapper': 19,'Halibut': 22,
+        
+          'Salmon': 45,'Trout': 28,
+          'Tuna': 50,'MahiMahi': 35,
+          'Barracuda': 40,'Grouper': 32,
+          'Sturgeon': 48,'Marlin': 38,
+          'Anglerfish': 42,'Pike': 26,
+        
+          'Goldfish': 100,'Swordfish': 85,
+          'Coelacanth': 95,'MegamouthShark': 92,
+          'Oarfish': 88,'ElectricEel': 78,
+          'Arowana': 82,'GhostKoi': 98,
+          'WhaleShark': 90,'Hammerhead': 75
+        }
+        
+        if(Object.keys(userData.inv).length == 0){
+          await sock.sendMessage(jid, {text: sellMsg}, {quoted: msg})
+          break
+        }
+        
+        if(text[1] == 'all'){
+          sellMsg = 'You sell your inventory...\n'
+          let totalItem = 0
+          for(let [key, value] of Object.entries(userData.inv)){
+            if(key != 'Worm' && key != 'StarWorm' && sellList[key] != undefined){
+              let totalSell = sellList[key] * value
+              totalSellPrice += totalSell
+              delete userData.inv[key]
+              sellMsg += `> Sold *${key} x${value}* for *${totalSell} tokens*.\n`
+              totalItem += value
+            }
+          }
+          sellMsg += `You've sold *${totalItem}* items in your inventory!\n> You've been paid *${totalSellPrice} tokens!*`
+          tokenDecrement = -totalSellPrice
+        }else{
+          if(userData.inv[text[1]] != undefined && sellList[text[1]] != undefined){
+            let sellAmount = 1
+            if(Number.isInteger(Number(text[2])) && Number(text[2]) > 0 && Number(text[2]) <= userData.inv[text[1]]) sellAmount = Number(text[2])
+            if(text[2] == 'all') sellAmount = userData.inv[text[1]]
+            
+            totalSellPrice = sellList[text[1]] * sellAmount
+            userData.inv[text[1]] -= sellAmount
+            if(userData.inv[text[1]] == 0) delete userData.inv[text[1]]
+            tokenDecrement = -totalSellPrice
+            sellMsg = `You've sold *${text[1]} x${sellAmount}* for *${totalSellPrice} tokens*.`
+          }else{
+            sellMsg = 'Invalid! Usage:\n> .sell all\n .sell <item> <amount>\n .sell <item> all'
+          }
+        }
+        
+        await sock.sendMessage(jid, {text: sellMsg}, {quoted: msg})
+        break
       case '.buy':
-        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...'}, {quoted: msg})
+        let buyMsg = ''
+        let itemList = {
+          Worm: 1,
+          StarWorm: 5,
+          MToken: 1000
+        }
+        let buyList = Object.entries(itemList)
+          .map(([item, price]) => `${item} = ${price} Token`)
+          .join('\n')
+        if(text[1] == 'list'){
+          buyMsg = '*Item | Price*\n' + buyList
+        }else{
+          if(itemList[text[1]] != undefined){
+            let buyAmount = 1
+            if(Number.isInteger(Number(text[2])) && Number(text[2]) > 0) buyAmount = Number(text[2])
+            
+            let totalPrice = itemList[text[1]] * buyAmount
+            if(userData.token < totalPrice){
+              buyMsg = `Your token is not enough!\n> You have *${userData.token} tokens*.\n> Total item price: *${totalPrice} token.*`
+            }else{
+              buyMsg = `You've been charged *${totalPrice} token* for *x${buyAmount} ${text[1]}*!\n> See .inv`
+              if(userData.inv[text[1]] == undefined) userData.inv[text[1]] = 0
+              userData.inv[text[1]] += buyAmount
+              tokenDecrement = totalPrice
+            }
+          }else{
+            buyMsg = 'Invalid! Usage:\n> .buy list\n> .buy <item>\n> .buy <item> <amount>'
+          }
+        }
+        await sock.sendMessage(jid, {text: buyMsg}, {quoted: msg})
         break
       case '.roll':
         if(!text[1]){
-          await sock.sendMessage(jid, {text: `Please input how much token you want to roll.\nUsage: .roll <number/half/max>`}, {quoted: msg})
+          await sock.sendMessage(jid, {text: `Please input how much tokens you want to roll.\nUsage: .roll <number/half/max>`}, {quoted: msg})
           break
         }
         
@@ -491,29 +623,31 @@ async function main(){
         }
         
         if(tokenToUse <= 0 || tokenToUse > userData.token){
-          await sock.sendMessage(jid, {text: `Invalid token input or not enough token.\nYou have *${userData.token} token*.`}, {quoted: msg})
+          await sock.sendMessage(jid, {text: `Invalid tokens input or not enough tokens.\nYou have *${userData.token} token*.`}, {quoted: msg})
           break
         }
         
-        const rand = Math.random() * 100;
         const tiers = [
-        {limit: 10.0, calc: () => 0},
-        {limit: 35.0, calc: () => (Math.floor(Math.random() * 99) + 1) / 100},
-        {limit: 62.5, calc: () => 1},
-        {limit: 82.5, calc: () => (Math.floor(Math.random() * 99) + 101) / 100},
-        {limit: 92.5, calc: () => 2},
-        {limit: 97.5, calc: () => (Math.floor(Math.random() * 99) + 201) / 100}
+          {limit: 0.05, calc: () => 2.50 + (Math.random() * 0.50)}, // 5%
+          {limit: 0.20, calc: () => 2.00 + (Math.random() * 0.50)}, // 15
+          {limit: 0.45, calc: () => 1.00 + (Math.random() * 1.00)}, // 25
+          {limit: 0.75, calc: () => 0.50 + (Math.random() * 0.50)}, // 30
+          {limit: 1.00, calc: () => Math.random() * 0.50 } // 25
         ]
-        const matched = tiers.find(t => rand < t.limit)
         
-        let mult = matched ? matched.calc() : 3.00
-        let final = Math.floor(Number((tokenToUse * mult).toFixed(2)) * 100) / 100
+        const rand = Math.random()
+        const matched = tiers.find(t => rand <= t.limit)
+        
+        const mult = Number((matched ? matched.calc() : 0.00).toFixed(2))
+        const final = Math.floor(tokenToUse * mult * 100) / 100
+        const diff = Number((final - tokenToUse).toFixed(2))
+        
         await simulateTyping(sock, jid, 1000) 
-        await sock.sendMessage(jid, {text: `You got *${final} token*!\n*${tokenToUse}* * *${mult}* = *${final}*`}, {quoted: msg})
+        await sock.sendMessage(jid, {text: `You got *${diff}* tokens!\n> Roll result: *${tokenToUse}* * *${mult}* = *${final}*\n\nYour token: *${tokenToUse}* + *${diff}* = *${final}*`}, {quoted: msg})
         tokenDecrement = Math.floor(Number((tokenToUse - final).toFixed(2)) * 100) / 100
         break
       case '.roll%':
-        await sock.sendMessage(jid, {text: 'Roll Probability\n0 = 10%\n<1 = 25%\n1 = 27.5%\n<2 = 20%\n2 = 10%\n<3 = 5%\n3 = 2.5%'})
+        await sock.sendMessage(jid, {text: 'Roll Probability\n> 2.50 -> 3.00 *5%*\n> 2.00 -> 2.49 *15%*\n> 1.00 -> 2.00 *25%*\n> 0.50 -> 1.00 *30%*\n> 0.00 -> 0.50 *25%*'})
         break
       // #endregion }
       
@@ -530,9 +664,9 @@ async function main(){
         tokenDecrement = 5
         break
       case '.toimg':
-        if(await checkToken(sock, jid, msg, 2.5, userData.token) == true) break
-        await sock.sendMessage(jid, {text: 'Coming soon~\nJust wait...'}, {quoted: msg})
-        tokenDecrement = 2.5
+        if(await checkToken(sock, jid, msg, 5, userData.token) == true) break
+        await sticker.toMedia(sock, jid, msg, downloadMediaMessage)
+        tokenDecrement = 5
         break
       case '.rbx':
         if(await checkToken(sock, jid, msg, 10, userData.token) == true) break
@@ -582,6 +716,22 @@ async function main(){
       case 'when':
         await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
         break
+      case '.daily':
+        let msNow = new Date().getTime()
+        let timeResult = msNow - userData.lastDaily
+        let dailyMsg = ''
+        
+        if(userData.lastDaily == 0) timeResult = 86400000
+        if(timeResult < 86400000){
+          time = new Date(timeResult).toISOString().slice(11, 19)
+          dailyMsg = `You already claimed your daily!\n*${time}* Wait for 24 hours.`
+        }else{
+          dailyMsg = `You get *200* tokens from daily!`
+          tokenDecrement = -200
+          userData.lastDaily = msNow
+        }
+        sock.sendMessage(jid, {text: dailyMsg}, {quoted: msg})
+        break
       case '.freetoken':
         if(EXTRA_SAFELINKU === 'enabled'){
           const code = Math.random().toString(36).substring(2, 8).toUpperCase()
@@ -590,7 +740,7 @@ async function main(){
   
           const targetUrl = `https://api.whatsapp.com/send?phone=${PHONE_NUMBER}&text=.claim%20${code}`
           
-          await sock.sendMessage(jid, {text: 'Generating 250 token link...'}, {quoted: msg})
+          await sock.sendMessage(jid, {text: 'Generating 250 tokens link...'}, {quoted: msg})
   
           const shortLink = await monetize.generateSafelink(targetUrl, SAFELINKU_TOKEN)
   
