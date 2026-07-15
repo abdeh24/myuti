@@ -32,7 +32,7 @@ _please make sure, target is not private post~_
 ====
 ```ABOUT```
 > Name: Myuti
-> Version: 0.4.1
+> Version: 0.4.2
 > Language: NodeJS
 > Birth: 13 May 2026
 > Dev: Abde
@@ -57,6 +57,7 @@ _please make sure, target is not private post~_
 
 - Fishing
 > .fish
+> .fish%
 > .sell <item> <amount>
 > .buy <list/item> <amount>
 

@@ -36,18 +36,11 @@ if(EXTRA_SAFELINKU === 'enabled'){
 const userCooldowns = new Map()
 const COOLDOWN_TIME = 2500
 
-const cmdList = [
-  '.menu', '.help', '.about', '.info', '.tools', '.downloader', '.games', 
-  '.leaderboard', '.other', '.support', '.admin', '.update', '.ytd', '.fbd',
-  '.igd', '.ttd', '.twd', '.inv', '.afk', '.ttt', '.fish',
-  '.sell', '.buy', '.roll', '.roll%', '.s', '.toimg', '.rbx',
-  '.me', '.whenyah', 'whenyah', '.when', 'when', '.freetoken', '.claim',
-  '.resign', '.goon', '.daily', '.fish', '.sell', '.buy'
-]
+const nonPrefixCmd = ['whenyah', 'when']
 
 async function checkToken(sock, jid, msg, tokenNeeded, userToken){
   if(tokenNeeded <= userToken) return false
-  sock.sendMessage(jid, {text: `Not enough tokens for this command!\nNeed ${tokenNeeded} Tokens\nYour token: ${userToken}\nNeed token? Do .goon or .freetoken`}, {quoted: msg})
+  await sock.sendMessage(jid, {text: `Not enough tokens for this command!\nNeed ${tokenNeeded} Tokens\nYour token: ${userToken}\nNeed token? Do .goon or .freetoken`}, {quoted: msg})
   return true
 }
 
@@ -308,7 +301,9 @@ async function main(){
     // #endregion }
     
     // #region CHECK USER MESSAGES {
-    if(!cmdList.includes(text[0])) return
+    
+    if(!nonPrefixCmd.includes(text[0]?.trim()) && !text[0]?.startsWith('.')) return
+    //if(!cmdList.includes(text[0]) && !text[0].startsWith('.')) return
     const currentTime = Date.now()
     if(userCooldowns.has(userId)){
       const expirationTime = userCooldowns.get(userId) + COOLDOWN_TIME
@@ -500,6 +495,10 @@ async function main(){
         
         await sock.sendMessage(jid, {text: fishMsg}, {quoted: msg})
         break
+      case '.fish%':
+        let fishList = fish.getFishList()
+        await sock.sendMessage(jid, {text: fishList}, {quoted: msg})
+        break
       case '.sell':
         let totalSellPrice = 0
         let sellMsg = 'You have nothing to sell!\n> See .inv'
@@ -547,13 +546,13 @@ async function main(){
           break
         }
         
-        let blacklistOnSellAll = ['Worm', 'StarWorm', 'TruffleWorm', 'MToken']
+        let blacklistOnSellAll = ['Worm', 'StarWorm', 'TruffleWorm', 'MToken', 'DukeFishron', 'Emas74Kilogram', 'CurlyPanties', 'Pignon']
         
         if(text[1] == 'all'){
           sellMsg = 'You sell your inventory...\n'
           let totalItem = 0
           for(let [key, value] of Object.entries(userData.inv)){
-            if(blacklistOnSellAll[key] == undefined && sellList[key] != undefined){
+            if(!blacklistOnSellAll.includes(key) && sellList[key] != undefined){
               let totalSell = sellList[key] * value
               totalSellPrice += totalSell
               delete userData.inv[key]
@@ -590,10 +589,10 @@ async function main(){
           MToken: 1000
         }
         let buyList = Object.entries(itemList)
-          .map(([item, price]) => `${item} = ${price} Token`)
+          .map(([item, price]) => `> ${item} = ${price} Token`)
           .join('\n')
         if(text[1] == 'list'){
-          buyMsg = '*Item | Price*\n' + buyList
+          buyMsg = '*Buy List...*\n' + buyList
         }else{
           if(itemList[text[1]] != undefined){
             let buyAmount = 1
@@ -741,7 +740,7 @@ async function main(){
           tokenDecrement = -200
           userData.lastDaily = msNow
         }
-        sock.sendMessage(jid, {text: dailyMsg}, {quoted: msg})
+        await sock.sendMessage(jid, {text: dailyMsg}, {quoted: msg})
         break
       case '.freetoken':
         if(EXTRA_SAFELINKU === 'enabled'){
