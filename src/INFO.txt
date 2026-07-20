@@ -32,7 +32,7 @@ _please make sure, target is not private post~_
 ====
 ```ABOUT```
 > Name: Myuti
-> Version: 0.4.2
+> Version: 0.5.0
 > Language: NodeJS
 > Birth: 13 May 2026
 > Dev: Abde
@@ -68,7 +68,6 @@ _please make sure, target is not private post~_
 ====
 ```TOOLS```
 > .s <img/gif/vids> _(media to sticker)_
-> .toimg <reply sticker> _(sticker to img/gif)_
 > .rbx <username> _(download user model)_
 ====
 ```OTHER```

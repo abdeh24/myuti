@@ -36,7 +36,7 @@ if(EXTRA_SAFELINKU === 'enabled'){
 const userCooldowns = new Map()
 const COOLDOWN_TIME = 2500
 
-const nonPrefixCmd = ['whenyah', 'when']
+const nonPrefixCmd = ['whenyah', 'when', 'whenyh', 'whenya', 'when?']
 
 async function checkToken(sock, jid, msg, tokenNeeded, userToken){
   if(tokenNeeded <= userToken) return false
@@ -44,9 +44,12 @@ async function checkToken(sock, jid, msg, tokenNeeded, userToken){
   return true
 }
 
-async function simulateTyping(sock, jid, duration = 1500){
+async function simulateTyping(sock, jid, {duration = 1000, auto = false, text = ''} = {}){
   await sock.sendPresenceUpdate('composing', jid)
+  if(auto == true && text.length > 200) duration = text.length * 5
+  if(auto == true && text.length >= 1000) duration = 5000
   await new Promise(resolve => setTimeout(resolve, duration))
+  await sock.sendPresenceUpdate('paused', jid)
 }
 
 async function isUpdateExist(){
@@ -57,7 +60,7 @@ async function isUpdateExist(){
       return 'No new updates found.'
     }
     
-    return 'Updates pulled successfully! You can now .kill the process...'
+    return `Updates pulled successfully! You can now .kill the process...\n\n${stdout}`
   }catch(error){
     return `Error executing git pull: ${error.message}`
   }
@@ -252,7 +255,7 @@ async function main(){
       switch(text[0]){
         case '.update':
           let log = await isUpdateExist()
-          console.log(log)
+          await simulateTyping(sock, jid, {auto: true, text: log})
           await sock.sendMessage(jid, {text: log}, {quoted: msg})
           break
         case '.kill':
@@ -290,9 +293,11 @@ async function main(){
             const {stdout, stderr} = await execPromise(cmdToRun, {timeout: 10000})
             
             const output = stdout || stderr || 'Success, no output...'
+            await simulateTyping(sock, jid, {auto: true, text: output.trim()})
             await sock.sendMessage(jid, {text: output.trim()}, {quoted: msg})
           }catch(error){
             const output = error.stdout || error.stderr || error.message;
+            await simulateTyping(sock, jid, {auto: true, text: output.trim()})
             await sock.sendMessage(jid, {text: output.trim()}, {quoted: msg})
           }
           break
@@ -322,14 +327,15 @@ async function main(){
       // #region MAIN COMMANDS {
       case '.menu':
       case '.help':
-        await simulateTyping(sock, jid, 1000)
+        await simulateTyping(sock, jid)
         await sock.sendMessage(jid, {text: menuText[0]}, {quoted: msg})
         break
       case '.about':
-        await simulateTyping(sock, jid, 1000)
+        await simulateTyping(sock, jid)
         await sock.sendMessage(jid, {text: menuText[3]}, {quoted: msg})
         break
       case '.info':
+        await simulateTyping(sock, jid)
         let rawUptime = Math.floor(process.uptime())
         
         days = Math.floor(rawUptime / (60 * 60 * 24))
@@ -340,32 +346,32 @@ async function main(){
         await sock.sendMessage(jid, {text: osInfo}, {quoted: msg})
         break
       case '.tools':
-        await simulateTyping(sock, jid, 1000)
+        await simulateTyping(sock, jid)
         await sock.sendMessage(jid, {text: menuText[6]}, {quoted: msg})
         break
       case '.downloader':
-        await simulateTyping(sock, jid, 1000)
+        await simulateTyping(sock, jid)
         await sock.sendMessage(jid, {text: menuText[2]}, {quoted: msg})
         break
       case '.games':
-        await simulateTyping(sock, jid, 1000)
+        await simulateTyping(sock, jid)
         await sock.sendMessage(jid, {text: menuText[5]}, {quoted: msg})
         break
       case '.leaderboard':
-        await simulateTyping(sock, jid, 2000)
         let leaderboardText = await localdb.updateLeaderboards(userData.username)
+        await simulateTyping(sock, jid, {auto: true, text: leaderboardText})
         await sock.sendMessage(jid, {text: leaderboardText}, {quoted: msg})
         break
       case '.other':
-        await simulateTyping(sock, jid, 1000)
+        await simulateTyping(sock, jid)
         await sock.sendMessage(jid, {text: menuText[7]}, {quoted: msg})
         break
       case '.support':
-        await simulateTyping(sock, jid, 1000)
+        await simulateTyping(sock, jid)
         await sock.sendMessage(jid, {text: menuText[4]}, {quoted: msg})
         break
       case '.admin':
-        await simulateTyping(sock, jid, 1000)
+        await simulateTyping(sock, jid)
         await sock.sendMessage(jid, {text: menuText[1]}, {quoted: msg})
         break
       // #endregion }
@@ -392,7 +398,7 @@ async function main(){
         try{
           const dlResult = await download(typeMap[text[0]], text[1])
           const resultString = typeof dlResult === 'object' ? JSON.stringify(dlResult, null, 2) : String(dlResult)
-          await simulateTyping(sock, jid, 2000)
+          await simulateTyping(sock, jid {auto: true, text: resultString})
           await sock.sendMessage(jid, {text: resultString}, {quoted: msg})
           tokenDecrement = 10
         }catch(err){
@@ -411,6 +417,7 @@ async function main(){
             .join('\n')
         }
         invMsg += invRes
+        await simulateTyping(sock, jid, {auto: true, text: invMsg})
         await sock.sendMessage(jid, {text: invMsg, mentions: [userId]}, {quoted: msg})
         break
       case '.afk':
@@ -496,6 +503,7 @@ async function main(){
         await sock.sendMessage(jid, {text: fishMsg}, {quoted: msg})
         break
       case '.fish%':
+        await simulateTyping(sock, jid)
         let fishList = fish.getFishList()
         await sock.sendMessage(jid, {text: fishList}, {quoted: msg})
         break
@@ -693,7 +701,8 @@ async function main(){
           break
         }
         
-        await simulateTyping(sock, jid, 2000)
+        await simulateTyping(sock, jid, {auto: true, text: info[2]})
+        
         try{
           await sock.sendMessage(jid, {
             document: fs.readFileSync(`src/tmp/${info[1]}`),
@@ -724,7 +733,12 @@ async function main(){
       case 'whenyah':
       case '.when':
       case 'when':
-        await sock.sendMessage(jid, {text: 'When when'}, {quoted: msg})
+      case 'whenya':
+      case 'whenyh':
+      case 'when?':
+        let whenArr = ['when when', 'When when', '(2)', 'Besok', 'when yah', 'When yah']
+        let randomItem = whenArr[Math.floor(Math.random() * whenArr.length)];
+        await sock.sendMessage(jid, {text: randomItem}, {quoted: msg})
         break
       case '.daily':
         let msNow = new Date().getTime()
