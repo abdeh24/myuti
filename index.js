@@ -398,7 +398,7 @@ async function main(){
         try{
           const dlResult = await download(typeMap[text[0]], text[1])
           const resultString = typeof dlResult === 'object' ? JSON.stringify(dlResult, null, 2) : String(dlResult)
-          await simulateTyping(sock, jid {auto: true, text: resultString})
+          await simulateTyping(sock, jid, {auto: true, text: resultString})
           await sock.sendMessage(jid, {text: resultString}, {quoted: msg})
           tokenDecrement = 10
         }catch(err){
