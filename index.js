@@ -683,8 +683,8 @@ async function main(){
         break
       case '.toimg':
         if(await checkToken(sock, jid, msg, 5, userData.token) == true) break
-        await sticker.toMedia(sock, jid, msg, downloadMediaMessage)
-        tokenDecrement = 5
+        const ok = await sticker.toMedia(sock, jid, msg, downloadMediaMessage)
+        if(ok) tokenDecrement = 5
         break
       case '.rbx':
         if(await checkToken(sock, jid, msg, 10, userData.token) == true) break
